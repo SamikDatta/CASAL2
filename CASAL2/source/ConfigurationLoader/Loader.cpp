@@ -66,7 +66,7 @@ bool Loader::LoadConfigFile(const string& override_file_name) {
 
     file.Parse();
 
-    LOG_FINEST() << "file_lines_.size() == " << file_lines_.size();
+    LOG_FINE() << "file_lines_.size() == " << file_lines_.size();
     if (file_lines_.size() == 0)
       LOG_FATAL() << "The configuration file " << config_file << " is empty. Please specify a valid configuration file";
   }
@@ -338,9 +338,9 @@ void Loader::ParseBlock(vector<FileLine> &block) {
       vector<string> values(line_parts.begin(), line_parts.end());
 
       // We're loading a standard row of data for the table
-      if (current_table_->requires_comlums() && values.size() != current_table_->GetColumnCount()) {
+      if (current_table_->requires_comlums() && values.size() != current_table_->column_count()) {
         LOG_FATAL() << "At line " << file_line.line_number_ << " in " << file_line.file_name_
-            << ": Table data does not contain the correct number of columns. Expected (" << current_table_->GetColumnCount() << ") : Actual (" << values.size() << ")\n"
+            << ": Table data does not contain the correct number of columns. Expected (" << current_table_->column_count() << ") : Actual (" << values.size() << ")\n"
             << boost::join(values, ", ");
       }
 

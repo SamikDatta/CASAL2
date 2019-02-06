@@ -80,6 +80,7 @@ void CloseLibrary(void* library) {
 #endif
 
 // Function Prototypes
+void RunConfigurationFileValidation(int argc, char * argv[], niwa::utilities::RunParameters &options);
 void RunBasic(int argc, char * argv[], niwa::utilities::RunParameters &options);
 void RunEstimation(int argc, char * argv[], niwa::utilities::RunParameters &options);
 void RunMCMC(int argc, char * argv[], niwa::utilities::RunParameters &options);
@@ -130,24 +131,24 @@ int main(int argc, char * argv[]) {
   case RunMode::kUnitTest:
     RunUnitTests(argc, argv, options);
     return return_code_;
+  case RunMode::kQuery:
+    RunBasic(argc, argv, options);
+    return return_code_;
   default:
     break;
   }
 
+
   /**
-   * Pre-Parse our configuration file so we can determine what library we want
+   * Pre-Validate our configuration file and determine what minimiser
    * to use for the estimation
    */
-  auto preload_method = (PRELOADPROC)LoadLibraryFunction(release_library, "PreParseConfigFiles");
-  if (preload_method == nullptr) {
-    cout << "Error: Failed to get the PreParseConfigFiles method address" << endl;
-    CloseLibrary(release_library);
-    return -1;
-  }
-  if ((preload_method)(options) != 0) {
-    return -1;
-  }
 
+  RunConfigurationFileValidation(argc, argv, options);
+  if (return_code_ != 0)
+    return return_code_;
+
+  // go go go
   switch(options.run_mode_) {
   case RunMode::kLicense:
   case RunMode::kVersion:
@@ -173,6 +174,48 @@ int main(int argc, char * argv[]) {
 
   CloseLibrary(release_library);
 	return return_code_;
+}
+
+/**
+ * This method will re-load the release library to parse the configuration file for any
+ * validation errors. We also use this to figure out what minimisers or MCMC objects we want
+ * to use so we can load proper files in the future.
+ */
+void RunConfigurationFileValidation(int argc, char * argv[], niwa::utilities::RunParameters &options) {
+  /*
+   * load our release library to parse the command line
+   * parameters
+   */
+  auto release_library = LoadSharedLibrary(release_lib.c_str());
+  if (release_library == nullptr) {
+    cout << "Error: Failed to load CASAL2 Release Library: " << release_lib << endl;
+    return_code_ = -1;
+    return;
+  }
+
+  /**
+   * Load the "LoadOptions" method and parse our options
+   */
+  auto main_method = (RUNPROC)LoadLibraryFunction(release_library, "Run");
+  if (main_method == nullptr) {
+    cout << "Error: Failed to get the main method address" << endl;
+    CloseLibrary(release_library);
+    return_code_ = -1;
+    return;
+  }
+
+  RunMode::Type temp = options.run_mode_;
+  options.run_mode_ = RunMode::kTesting;
+  options.no_std_report_ = true;
+  string log_level = options.log_level_;
+  options.log_level_ = "error";
+
+  return_code_ = (main_method)(argc, argv, options);
+  options.run_mode_  = temp;
+  options.no_std_report_ = false;
+  options.log_level_ = log_level;
+
+  return;
 }
 
 /**
@@ -231,16 +274,25 @@ void RunEstimation(int argc, char * argv[], niwa::utilities::RunParameters &opti
 }
 
 /**
- * Run our MCMC. But first we want to run an Estimation
+ * Run our MCMC. But first we want to run an Estimation.
+ *
+ * This is different than the standalone executable. The standalone
+ * executable will handle the minimisation itself. With the front end application
+ * we want to handle it so we can load specific DLLs/SOs with different autodiff
+ * minimisers, then swap back to the release.dll/.so for MCMC so it's not hideously
+ * slow.
  */
 void RunMCMC(int argc, char * argv[], niwa::utilities::RunParameters &options) {
-  options.create_mpd_file_ = true;
-  options.no_std_report_   = true;
-  options.run_mode_        = RunMode::kEstimation;
-  RunEstimation(argc, argv, options);
-  if (return_code_ != 0)
-    return;
+  if (!options.skip_estimation_) {
+    options.create_mpd_file_ = true; // used by MCMC to load covariance matrix
+    options.no_std_report_   = true; // otherwise, we get the report twice
+    options.run_mode_        = RunMode::kEstimation;
+    RunEstimation(argc, argv, options);
+    if (return_code_ != 0)
+      return;
+  }
 
+  options.skip_estimation_ = true; // Stop the model from re-estimating
   options.run_mode_        = RunMode::kMCMC;
   RunBasic(argc, argv, options);
 }
