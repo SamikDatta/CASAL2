@@ -29,8 +29,8 @@ namespace age {
  */
 Partition_YearCrossAgeMatrix::Partition_YearCrossAgeMatrix(Model* model) :
     Report(model) {
-  run_mode_ = (RunMode::Type) (RunMode::kBasic | RunMode::kProjection);
-  model_state_ = State::kExecute;
+  run_mode_    = (RunMode::Type)(RunMode::kBasic | RunMode::kProjection | RunMode::kSimulation| RunMode::kEstimation | RunMode::kProfiling);
+  model_state_ = (State::Type)(State::kIterationComplete);
 
   parameters_.Bind<string>(PARAM_TIME_STEP, &time_step_, "Time Step label", "",
       "");

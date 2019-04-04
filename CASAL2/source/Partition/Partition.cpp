@@ -51,6 +51,8 @@ void Partition::Validate() {
  * accessor objects.
  */
 void Partition::Build() {
+
+
   Categories* categories                    = model_->categories();
   vector<string> category_names             = categories->category_names();
 
@@ -104,8 +106,11 @@ void Partition::BuildMeanLengthData() {
 
   for (auto iter : partition_) {
     auto& category = *iter.second; // mean_length_by_time_step_age_
-    if (category.age_length_ == nullptr)
+    LOG_FINEST() << "category = " << category.name_;
+    if (category.age_length_ == nullptr) {
+      LOG_FINE() << "No age-length pointer";
       return;
+    }
 
     // Allocate memory for the mean_length_by_time_step_age if it hasn't been done previously
     if (category.mean_length_by_time_step_age_.size() == 0) {
@@ -126,6 +131,7 @@ void Partition::BuildMeanLengthData() {
         for (unsigned age = category.min_age_; age <= category.max_age_; ++age) {
           age_index = age - category.min_age_;
           category.mean_length_by_time_step_age_[year_index][step_iter][age_index] = category.age_length_->GetMeanLength(year, step_iter, age);
+          LOG_FINE() << "year ndx = " << year_index << " time step index = " << step_iter << " age index = " << age << " val = " << category.mean_length_by_time_step_age_[year_index][step_iter][age_index] ;
         }
       }
     }
@@ -296,6 +302,10 @@ void Partition::Reset() {
  */
 partition::Category& Partition::category(const string& category_label) {
   auto find_iter = partition_.find(category_label);
+  LOG_FINE() << "we wont " << category_label;
+  for(auto& map_vals : partition_)
+	  LOG_FINE()  << map_vals.first;
+
   if (find_iter == partition_.end())
     LOG_FATAL() << "The partition does not have a category " << category_label;
 
@@ -307,8 +317,12 @@ partition::Category& Partition::category(const string& category_label) {
  */
 utilities::Vector4& Partition::age_length_proportions(const string& category_label) {
   auto find_iter = age_length_proportions_.find(category_label);
-  if (find_iter == age_length_proportions_.end())
+  for(auto& map_vals : age_length_proportions_)
+	  LOG_FINE()  << map_vals.first;
+
+  if (find_iter == age_length_proportions_.end()) {
     LOG_FATAL() << "The partition does not have age length proportions for category " << category_label;
+  }
 
   return (*find_iter->second);
 }

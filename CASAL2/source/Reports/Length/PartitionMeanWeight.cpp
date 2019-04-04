@@ -29,7 +29,8 @@ namespace length {
  */
 PartitionMeanWeight::PartitionMeanWeight(Model* model) : Report(model) {
   run_mode_    = (RunMode::Type)(RunMode::kBasic | RunMode::kProjection | RunMode::kSimulation| RunMode::kEstimation | RunMode::kProfiling);
-  model_state_ = State::kExecute;
+  model_state_ = (State::Type)(State::kIterationComplete);
+
 
   parameters_.Bind<string>(PARAM_TIME_STEP, &time_step_, "Time Step label", "", "");
   parameters_.Bind<unsigned>(PARAM_YEARS, &years_, "Years", "", true);
