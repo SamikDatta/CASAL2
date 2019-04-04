@@ -79,6 +79,8 @@ class MortalityInstantaneous : public Process {
     string            selectivity_label_;
     Selectivity*      selectivity_ = nullptr;
     vector<Double>    selectivity_values_;
+    string            discard_selectivity_label_;
+    Selectivity*      discard_selectivity_ = nullptr;
   };
 
 public:
@@ -99,6 +101,7 @@ public:
 
   // accessors
   map<unsigned, map<string, map<string, vector<Double>>>>&  catch_at() { return removals_by_year_fishery_category_; };
+  map<unsigned, map<string, map<string, vector<Double>>>>&  discard_data() { return discards_by_year_fishery_category_; };
 
   // set
   vector<unsigned>            set_years();
@@ -112,6 +115,7 @@ private:
   map<string, FisheryData>    fisheries_;
   parameters::Table*          catches_table_ = nullptr;
   parameters::Table*          method_table_ = nullptr;
+
   accessor::Categories        partition_;
   Double                      current_m_ = 0.0;
 
@@ -127,14 +131,20 @@ private:
   map<unsigned, Double>       time_step_ratios_;
   vector<string>              selectivity_labels_;
   vector<Selectivity*>        selectivities_;
+  vector<string>			  discard_selectivity_labels_;
+  bool					 	  include_discards_ = false;
   // members for observations
   map<unsigned,  map<string, map<string, vector<Double>>>> removals_by_year_fishery_category_; // Year,  fishery, category
+  map<unsigned,  map<string, map<string, vector<Double>>>> discards_by_year_fishery_category_; // Year,  fishery, category
+
   map<unsigned, map<string, vector<string>>> year_method_category_to_store_; // Year,  fishery, category
   // Members for reporting
   vector<unsigned>            time_steps_to_skip_applying_F_mortaltiy_;
   bool                        use_age_weight_ = true;
   vector<vector<vector<Double>>> removals_by_year_category_age_; // year[year_ndx][category_ndx][age_ndx]
+
   vector<vector<Double>>     removals_by_category_age_; // [category_ndx][age_ndx]
+  vector<vector<Double>>     discards_by_category_age_; // [category_ndx][age_ndx]
 
 
 };
