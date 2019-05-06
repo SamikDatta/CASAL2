@@ -362,7 +362,11 @@ These observations have the same expectations as the mortality block versions de
 A list of \texttt{types} that are associated with this set of observations are:
 \begin{itemize}
 	\item \texttt{process\_removals\_by\_age}
+	\item \texttt{process\_removals\_by\_age\_retained}
+	\item \texttt{process\_removals\_by\_age\_retained\_total}
 	\item \texttt{process\_removals\_by\_length}
+	\item \texttt{process\_removals\_by\_length\_retained}
+	\item \texttt{process\_removals\_by\_length\_retained\_total}
 	\item \texttt{process\_proportions\_migrating}	
 \\	
 \paragraph*{\I{Process removals by age}\label{sec:removals-by-age}}	
@@ -385,6 +389,58 @@ The observation class then acquires the variable $E[N_{a,c,m}]$ and applies agei
 \\\\
 Likelihoods that are available for this observation class are the mulitnomial, dirichlet and the lognormal. See Section~\ref{sec:likelihood-observations} for information on the respected likelihood.
 \\\\
+
+\paragraph*{\I{Process removals by age retained}\label{sec:removals-by-age-retained}}	
+Observations of retained and total catches by age are permitted, using the labels \texttt{process\_removals\_by\_age\_retained} and \texttt{process\_removals\_by\_age\_retained\_total} respectively. Examples of two such observations are given below, with the associated process \texttt{Instantaneous\_Mortality\_Retained} having the form of the example in Section \ref{sec:inst-mort-retained}. First, for retained catch:
+
+{\small{\begin{verbatim}
+@observation potFishAFtotal   #test syntax get catch AF out
+type process_removals_by_age_retained_total
+mortality_instantaneous_process Instantaneous_Mortality_Retained
+method_of_removal FishingPot
+years 2005
+time_step 1
+categories male
+### ageing_error Normal_ageing
+min_age 3
+max_age 15
+plus_group True
+table obs
+2005 0.0002814574 0.0095351205 0.1661896098 0.2701718827 0.2214454177 0.1661869474 0.1107930285 0.0553965360 0 0 0 0 0 # from R code, for a50 = 5, ato95 = 0.8
+end_table
+table error_values
+2005 651
+end_table
+likelihood multinomial
+delta 1e-11
+\end{verbatim}}}
+
+and similarly, for total catch:
+
+{\small{\begin{verbatim}
+@observation potFishAFretained   #test syntax --> fits to discards not catch
+type process_removals_by_age_retained
+mortality_instantaneous_process Instantaneous_Mortality_Retained
+method_of_removal FishingPot
+years 2005
+time_step 1
+categories male
+# ageing_error Normal_ageing
+min_age 3
+max_age 15
+plus_group True
+table obs
+2005 1.650990e-10 7.566419e-07 1.771126e-03 1.962050e-01 3.192775e-01 2.413644e-01 1.609208e-01 8.046047e-02 0 0 0 0 0 # from R code, for a50 = 6. ato95 = 0.6
+end_table
+table error_values
+2005 651
+end_table
+likelihood multinomial
+delta 1e-11
+\end{verbatim}}}
+	
+
+
 \paragraph*{\I{Process removals by length}\label{sec:removals-by-length}}
 Removals by length observations are observations of the relative number of individuals at length, partway through a process of type \texttt{mortality\_instantaneous}. This observation is exclusively associated with the process of type \texttt{mortality\_instantaneous}, and will error out if associated with any other process type.
 \\\\
@@ -424,6 +480,52 @@ end_table
 \end{verbatim}}}
 
 Likelihoods that are available for this observation are the mulitnomial, dirichlet and the lognormal. See Section~\ref{sec:likelihood-observations} for information on the respected likelihood.
+
+\paragraph*{\I{Process removals by age retained}\label{sec:removals-by-length-retained}}	
+Observations of retained and total catches by length are permitted, using the labels \texttt{process\_removals\_by\_length\_retained} and \texttt{process\_removals\_by\_length\_retained\_total} respectively. Examples of two such observations are given below, with the associated process \texttt{Instantaneous\_Mortality\_Retained} having the form of the example in Section \ref{sec:inst-mort-retained}. First, for retained catch:
+
+{\small{\begin{verbatim}
+@observation potFishLFtotal   #test syntax get catch LF out
+type process_removals_by_length_retained_total
+mortality_instantaneous_process Instantaneous_Mortality_Retained
+method_of_removal FishingPot
+years 2005
+time_step 1
+categories male
+length_bins 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 # for LF in catch
+length_plus False
+table obs
+2005 0.05344612 0.06432242 0.07357780 0.08050385 0.08473451 0.08619620 0.08502982 0.08152921 0.07609540 0.06919236 0.06130315 0.05289594 0.04440352 0.03620990 0.02863612 0.02192368 # from R code, converted lengths for a50 = 5, ato95 = 0.8
+end_table
+table error_values
+2005 651
+end_table
+likelihood multinomial
+delta 1e-11
+\end{verbatim}}}
+
+and similarly, for total catch:
+
+{\small{\begin{verbatim}
+@observation potFishLFretained   #test syntax get retained LF out
+type process_removals_by_length_retained
+mortality_instantaneous_process Instantaneous_Mortality_Retained
+method_of_removal FishingPot
+years 2005
+time_step 1
+categories male
+length_bins 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 # for LF in catch
+length_plus False
+table obs
+2005 0.02462879 0.03536036 0.04759163 0.06025858 0.07205340 0.08169356 0.08817806 0.09095124 0.08994426 0.08551446 0.07832640 0.06921554 0.05906081 0.04868002 0.03875492 0.02978796 # from R code, converted lengths for a50 = 6, ato95 = 0.6
+end_table
+table error_values
+2005 651
+end_table
+likelihood multinomial
+delta 1e-11
+\end{verbatim}}}
+
 
 \paragraph*{\I{Proportions migrating}\label{sec:Proportions-migrating}}
 This observation is of the proportion migrating from one area to another. This observation is exclusively associated with the process type \texttt{transition\_category}, and will error out when trying to associate with any other process type. This observation is used to inform migration rates in migration processes. This observation class is used in the Hoki stock assessment see~\cite{francis_03} for more information on how these observations are collected and the situation you would use it. This observation calculates an expectation $E_a$ of proportions for each age class $a$ that have migrated, by evaluating the following,

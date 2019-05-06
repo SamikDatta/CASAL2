@@ -544,7 +544,7 @@ For example, to apply ageing to the categories \texttt{immature} and \texttt{mat
 
 \subsubsection{\I{Mortality}\label{sec:mortality}}
 
-Seven types of mortality processes are permissible in \CNAME: constant rate, event, biomass-event, instantaneous, Hollings, initialisation, and a density-dependent relationship based on prey suitability. These processes remove individuals from the partition, either as a rate, as a total number (abundance), as a biomass of individuals or as a mixture of these. Note that \CNAME\ does not (yet) implement the Baranov catch equation. However, instantaneous mortality is considered an approximation to the Baranov catch equation. To apply both natural and biomass-event mortality \texttt{mortality\_instantaneous} can be specified. Note that all mortality processes occur within a mortality block of a time step see Section~\ref{sec:mortality_block} for more information and definitions on mortality blocks. 
+Eight types of mortality processes are permissible in \CNAME: constant rate, event, biomass-event, instantaneous, instantaneous retained, Hollings, initialisation, and a density-dependent relationship based on prey suitability. These processes remove individuals from the partition, either as a rate, as a total number (abundance), as a biomass of individuals or as a mixture of these. Note that \CNAME\ does not (yet) implement the Baranov catch equation. However, instantaneous mortality is considered an approximation to the Baranov catch equation. To apply both natural and biomass-event mortality \texttt{mortality\_instantaneous} can be specified. Note that all mortality processes occur within a mortality block of a time step see Section~\ref{sec:mortality_block} for more information and definitions on mortality blocks. 
 
 \paragraph{Constant mortality rate}
 To specify a constant annual mortality rate \index{Constant mortality}(e.g. $M=0.2$) for categories `male' and `female', then, 
@@ -645,6 +645,7 @@ and specifed similarly for a \textbf{biomass} based fishing mortality process,
 		selectivities FishingSel FishingSel
 		penalty event_mortality_penalty
 		\end{verbatim}}}
+
 \paragraph{Instantaneous mortality}
 
 The instantaneous mortality process\index{Instantaneous mortality} combines both natural mortality and event biomass mortality into a single process. This allows the simultaneous application of both natural mortality and anthropogenic mortality to occur across multiple time steps. This process applies half the natural mortality in each time step, then the mortalities from all the concurrent removals instantaneously, then the remaining half of the natural mortality. In fisheries models this is the most commonly used mortality process. It allows for multiple removal events in the case of a fisheries model multiple fisheries/fleets. There are a few constraints that a removal method can only occur in one time step, but you can have multiple removals to cover events during the year.
@@ -718,6 +719,28 @@ method       category  selectivity u_max   time_step penalty 		age_weight
 FishingWest   stock     westFSel    0.7     step1     CatchPenalty
 FishingEast   stock     eastFSel    0.7     step1     CatchPenalty
 end_table		
+\end{verbatim}}}
+
+\paragraph{Instantaneous mortality retained}\label{sec:inst-mort-retained}
+
+The instantaneous mortality retained process\index{Instantaneous mortality retained} is the same as the instantaneous mortality process, but allows both total and retained catch to be accounted for. For this an additional selectivity \texttt{retained\_selectivity} needs to be provided as part of the process, such as in the example below:
+
+
+{\small{\begin{verbatim}
+@process Instantaneous_Mortality_Retained
+type mortality_instantaneous_retained  #Instantaneous_Mortality_Retained
+m 0    # testing without natural mortality
+time_step_ratio 1
+selectivities One
+categories *
+table catches
+year FishingPot
+2005	8015.123
+end_table
+table method
+method  category     selectivity  retained_selectivity  u_max  time_step  penalty
+FishingPot  format=male  potFSel_length_male  potRet_male  0.7  1  CatchMustBeTaken1
+end_table
 \end{verbatim}}}
 
 \paragraph{Holling's mortality rate}
