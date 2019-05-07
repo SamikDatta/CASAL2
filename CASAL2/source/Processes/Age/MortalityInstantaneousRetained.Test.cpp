@@ -1,11 +1,11 @@
 /**
- * @file MortalityInstantaneous.Test.cpp
- * @author Scott Rasmussen (scott.rasmussen@zaita.com)
- * @github https://github.com/Zaita
- * @date 13/08/2015
+ * @file MortalityInstantaneousRetained.Test.cpp
+ * @author Samik Datta (samik.datta@niwa.co.nz)
+ * @github https://github.com/SamikDatta
+ * @date 07/05/2019
  * @section LICENSE
  *
- * Copyright NIWA Science ©2015 - www.niwa.co.nz
+ * Copyright NIWA Science ©2019 - www.niwa.co.nz
  *
  */
 #ifdef TESTMODE
@@ -116,7 +116,7 @@ years 2001:2005
 
 
 TEST_F(InternalEmptyModel, Processes_Mortality_Instantaneous_Retained_Simple) {
-  AddConfigurationLine(test_cases_process_mortality_instantaneous_retained, __FILE__, 51);
+  AddConfigurationLine(test_cases_process_mortality_instantaneous_retained, __FILE__, 31);
   LoadConfiguration();
 
   model_->Start(RunMode::kBasic);
