@@ -177,13 +177,13 @@ void MortalityInstantaneousRetained::DoValidate() {
     LOG_FATAL_P(PARAM_METHOD) << "Cannot find the column " << PARAM_CATEGORY << ", this column is needed, for casal2 to run this process. Please add it =)";
   if (std::find(columns.begin(), columns.end(), PARAM_SELECTIVITY) == columns.end())
     LOG_FATAL_P(PARAM_METHOD) << "Cannot find the column " << PARAM_SELECTIVITY << ", this column is needed, for casal2 to run this process. Please add it =)";
+  if (std::find(columns.begin(), columns.end(), PARAM_RETAINED_SELECTIVITY) == columns.end())
+    LOG_FATAL_P(PARAM_METHOD) << "Cannot find the column " << PARAM_RETAINED_SELECTIVITY << ", this column is needed, for casal2 to run this process. Please add it =)";
   if (std::find(columns.begin(), columns.end(), PARAM_TIME_STEP) == columns.end())
     LOG_FATAL_P(PARAM_METHOD) << "Cannot find the column " << PARAM_TIME_STEP << ", this column is needed, for casal2 to run this process. Please add it =)";
   if (std::find(columns.begin(), columns.end(), PARAM_U_MAX) == columns.end())
     LOG_FATAL_P(PARAM_METHOD) << "Cannot find the column " << PARAM_U_MAX << ", this column is needed, for casal2 to run this process. Please add it =)";
   if (std::find(columns.begin(), columns.end(), PARAM_PENALTY) == columns.end())
-    LOG_FATAL_P(PARAM_METHOD) << "Cannot find the column " << PARAM_PENALTY << ", this column is needed, for casal2 to run this process. Please add it =)";
- if (std::find(columns.begin(), columns.end(), PARAM_PENALTY) == columns.end())
     LOG_FATAL_P(PARAM_METHOD) << "Cannot find the column " << PARAM_PENALTY << ", this column is needed, for casal2 to run this process. Please add it =)";
   if (std::find(columns.begin(), columns.end(), PARAM_AGE_WEIGHT_LABEL) == columns.end()) {
     // Users can choose not to add this column if they wish
@@ -199,7 +199,6 @@ void MortalityInstantaneousRetained::DoValidate() {
   unsigned u_max_index        = std::find(columns.begin(), columns.end(), PARAM_U_MAX) - columns.begin();
   unsigned penalty_index      = std::find(columns.begin(), columns.end(), PARAM_PENALTY) - columns.begin();
   unsigned retained_selectivity_index = std::find(columns.begin(), columns.end(), PARAM_RETAINED_SELECTIVITY) - columns.begin();
-  include_retained_ = true; // in case missed if(inclue_retained) STMTs
   unsigned age_weight_index = 999;
 
   if (use_age_weight_)
@@ -240,14 +239,11 @@ void MortalityInstantaneousRetained::DoValidate() {
 
     boost::split(categories, row[category_index], boost::is_any_of(","));
     boost::split(selectivities, row[selectivity_index], boost::is_any_of(","));
+    boost::split(retained_selectivities, row[retained_selectivity_index], boost::is_any_of(","));
     if (use_age_weight_)
       boost::split(age_weights, row[age_weight_index], boost::is_any_of(","));
-    if (include_retained_) {
-      boost::split(retained_selectivities, row[retained_selectivity_index], boost::is_any_of(","));
-      if (categories.size() != retained_selectivities.size())
-        LOG_FATAL_P(PARAM_METHOD) << "The number of categories (" << categories.size()
-        << ") and retained selectivities (" << retained_selectivities.size() << ") provided must be identical";
-    }
+    if (categories.size() != retained_selectivities.size())
+      LOG_FATAL_P(PARAM_METHOD) << "The number of categories (" << categories.size() << ") and retained selectivities (" << retained_selectivities.size() << ") provided must be identical";
 
     if (categories.size() != selectivities.size())
       LOG_FATAL_P(PARAM_METHOD) << "The number of categories (" << categories.size()
@@ -257,6 +253,7 @@ void MortalityInstantaneousRetained::DoValidate() {
       FisheryCategoryData new_category_data(fisheries_[new_fishery.label_], *category_data_[categories[i]]);
       new_category_data.fishery_label_     = row[fishery_index];
       new_category_data.category_label_    = categories[i];
+      new_category_data.retained_selectivity_label_ = retained_selectivities[i];
       // check categories are in category_labels_ as well
 		  if (std::find(category_labels_.begin(), category_labels_.end(), categories[i]) == category_labels_.end())
 		  	LOG_ERROR_P(PARAM_METHOD) << "Found the category " << categories[i] << " in table but not in the '" << PARAM_CATEGORIES << "' subcommand, this means you are applying exploitation processes and not natural mortality, which is not currently allowed. Make sure all categories in the methods table are in the categories subcommand.";
@@ -266,9 +263,6 @@ void MortalityInstantaneousRetained::DoValidate() {
       else {
         new_category_data.category_.age_weight_label_ = PARAM_NONE;
         LOG_FINE() << "setting age weight label to none.";
-      }
-      if (include_retained_) {
-          new_category_data.retained_selectivity_label_ = retained_selectivities[i];
       }
       fishery_categories_.push_back(new_category_data);
     }
@@ -352,11 +346,9 @@ void MortalityInstantaneousRetained::DoBuild() {
     if (!fishery_category.selectivity_)
       LOG_ERROR_P(PARAM_METHOD) << "fishing selectivity " << fishery_category.selectivity_label_ << " does not exist. Have you defined it?";
 
-    if (include_retained_) {
-      fishery_category.retained_selectivity_ = model_->managers().selectivity()->GetSelectivity(fishery_category.retained_selectivity_label_);
-      if (!fishery_category.retained_selectivity_)
-        LOG_ERROR_P(PARAM_METHOD) << "retained selectivity " << fishery_category.retained_selectivity_label_ << " does not exist. Have you defined it?";
-    }
+    fishery_category.retained_selectivity_ = model_->managers().selectivity()->GetSelectivity(fishery_category.retained_selectivity_label_);
+    if (!fishery_category.retained_selectivity_)
+      LOG_ERROR_P(PARAM_METHOD) << "retained selectivity " << fishery_category.retained_selectivity_label_ << " does not exist. Have you defined it?";
 
   }
 
@@ -558,12 +550,11 @@ void MortalityInstantaneousRetained::DoExecute() {
 
             fishery_category.fishery_.vulnerability_ += vulnerable;  //all catch = WF in notes
 			
-			if(include_retained_){
-				Double retained_vulnerable = vulnerable
-					* fishery_category.retained_selectivity_values_[i];     //adjust to retained catch = RW in notes
+            Double retained_vulnerable = vulnerable
+                * fishery_category.retained_selectivity_values_[i];     //adjust to retained catch = RW in notes
                 				
-				fishery_category.fishery_.retained_vulnerability_ += retained_vulnerable;
-			}
+            fishery_category.fishery_.retained_vulnerability_ += retained_vulnerable;
+
           }
         } else {
           for (unsigned i = 0; i < category->data_.size(); ++i) {
@@ -574,12 +565,11 @@ void MortalityInstantaneousRetained::DoExecute() {
 
             fishery_category.fishery_.vulnerability_ += vulnerable;
 			
-			if(include_retained_){
-				Double retained_vulnerable = vulnerable
-					* fishery_category.retained_selectivity_values_[i];     //adjust to retained catch
+            Double retained_vulnerable = vulnerable
+                * fishery_category.retained_selectivity_values_[i];     //adjust to retained catch
                 				
-				fishery_category.fishery_.retained_vulnerability_ += retained_vulnerable;
-			}
+            fishery_category.fishery_.retained_vulnerability_ += retained_vulnerable;
+
           }
         }
         LOG_FINEST() << "Category is fished in this time_step " << time_step_index << " numbers at age = " << category->data_.size();

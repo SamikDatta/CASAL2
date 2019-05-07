@@ -161,5 +161,11 @@ You will notice another set of logging, which is also encouraged to add all thro
 
 \paragraph*{Adding a unit test}
 
-Still left to do - Samik and Marco to fill in after completing some unit tests.
+The best way to do these is usually to copy over a unit test checking a similar functionality, changing the name of the test to something new, and then updating the test as appropriate. Usually the unit test runs by running the function, and then checking the appropriate numbers which are output are equal to pre-established figures. Hence it is often most appropriate to write some R code which tests the functionality, and then to set both \CNAME\ and R off with the same initial population, to check that the same change occurs (e.g. drop in population for mortality).
 
+Some things which I have noted thus far:
+\begin{itemize}
+	\item If you are copying in a dummy model to test functionality. remove all \# signs, as \CNAME\ will crash on these.
+	\item The first time you add a new test, you will need to go to \texttt{Buildsystem} and run \texttt{dobuild test} to rebuild the executable and pick up all new test files. Subsequently, if edits need to be made to the test file (e.g. because it crashed) you can go into \texttt{bin\textbackslash windows\textbackslash test} and run \texttt{mingw32-make} - this will only check files which have been updated since the executable was last built, and is much quicker (a few seconds if you are only working on one file).
+	\item To run a limited number of tests, use the command \texttt{casal2 -r --gtest\_list\_tests} to see all tests which can be run, and \texttt{casal2 -r --gtest\_filter=*PATTERN*} to select by name. As a quick example, to run all tests containing the word 'Mortality' use the command \texttt{casal2 -r --gtest\_filter=*Mortality*}. (Note that this is case-sensitive.) Look online for more examples of the pattern matching (and exclusions) for \texttt{--gtest\_filter}.
+\end{itemize}

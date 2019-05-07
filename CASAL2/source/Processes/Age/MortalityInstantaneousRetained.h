@@ -148,7 +148,7 @@ private:
   vector<string>              selectivity_labels_;      //m_ogives?
   vector<Selectivity*>        selectivities_;
   vector<string>			        retained_selectivity_labels_;
-  bool					 	            include_retained_ = false;   //<<<<<<<<<<<<<<<<<<<<<<
+
   // members for observations
   map<unsigned,  map<string, map<string, vector<Double>>>> removals_by_year_fishery_category_; // Year,  fishery, category
   map<unsigned,  map<string, map<string, vector<Double>>>> retained_by_year_fishery_category_; // Year,  fishery, category
