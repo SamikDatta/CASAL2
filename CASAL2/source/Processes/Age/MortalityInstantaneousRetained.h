@@ -57,6 +57,7 @@ class MortalityInstantaneousRetained : public Process {
     map<unsigned, Double>  discards_;         //discard + retained as estimated from retained catch
     map<unsigned, Double>  actual_catches_;  //discard + retained 
     map<unsigned, Double>  actual_discards_; // estimated discard catch
+    map<unsigned, Double>  actual_discards_dead_; // estimated discard catch which dies
     map<unsigned, Double>  exploitation_by_year_; // I(CM?) added this so it can be reported
 													// maybe define for retained catch part of the stock
 
@@ -77,7 +78,6 @@ class MortalityInstantaneousRetained : public Process {
 	  string                selectivity_label_;
     Selectivity*          selectivity_;
     vector<Double>        selectivity_values_; // M-ogive
-    vector<Double>        retained_selectivity_values_; // *** TAKE OUT LATER ***
 	  AgeWeight*            age_weight_ = nullptr;
     string                age_weight_label_;
     bool                  used_in_current_timestep_;
@@ -97,6 +97,9 @@ class MortalityInstantaneousRetained : public Process {
     string            retained_selectivity_label_;
     Selectivity*      retained_selectivity_ = nullptr;
     vector<Double>    retained_selectivity_values_; // fishing
+    string            discard_mortality_selectivity_label_;
+    Selectivity*      discard_mortality_selectivity_ = nullptr;
+    vector<Double>    discard_mortality_selectivity_values_; // mortality of discards
   };   //add discard mortality later
 
 public:
@@ -155,7 +158,7 @@ private:
 
   map<unsigned, map<string, vector<string>>> year_method_category_to_store_; // Year,  fishery, category
   // Members for reporting
-  vector<unsigned>            time_steps_to_skip_applying_F_mortaltiy_;
+  vector<unsigned>            time_steps_to_skip_applying_F_mortality_;
   bool                        use_age_weight_ = true;
   vector<vector<vector<Double>>> removals_by_year_category_age_; // year[year_ndx][category_ndx][age_ndx]
   

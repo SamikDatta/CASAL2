@@ -234,6 +234,7 @@
 #define PARAM_DIFF_LOWER_BOUND                    "difference_lower_bound"
 #define PARAM_DIFF_UPPER_BOUND                    "difference_upper_bound"
 #define PARAM_DIFFERENCE_SCALE                    "difference_scale"
+#define PARAM_DISCARD_MORTALITY_SELECTIVITY       "discard_mortality_selectivity"
 #define PARAM_DISCARD_SELECTIVITY				          "discard_selectivity"
 #define PARAM_DISPERSION                          "dispersion"
 #define PARAM_DISTANCE                            "distance"
