@@ -67,13 +67,17 @@ year FishingPot
 2005  8015.123
 end_table
 table method
-method    category    selectivity     retained_selectivity      u_max time_step     penalty
-FishingPot    format=male      potFSel_length_male  potRet_male 0.7   1   CatchMustBeTaken1
+method     category    selectivity         retained_selectivity discard_mortality_selectivity u_max time_step penalty
+FishingPot format=male potFSel_length_male potRet_male          fifty_percent                 0.7   1         CatchMustBeTaken1
 end_table
 
 @selectivity One
 type constant
 c 1
+
+@selectivity fifty_percent
+type constant
+c 0.5
 
 @selectivity potFSel_length_male
 type logistic 

@@ -67,13 +67,17 @@ year FishingPot
 2005  8015.123
 end_table
 table method
-method    category    selectivity     retained_selectivity      u_max time_step     penalty
-FishingPot    format=male      potFSel_length_male  potRet_male 0.7   1   CatchMustBeTaken1
+method     category    selectivity         retained_selectivity discard_mortality_selectivity u_max time_step penalty
+FishingPot format=male potFSel_length_male potRet_male          fifty_percent                 0.7   1         CatchMustBeTaken1
 end_table
 
 @selectivity One
 type constant
 c 1
+
+@selectivity fifty_percent
+type constant
+c 0.5
 
 @selectivity potFSel_length_male
 type logistic 
@@ -121,14 +125,23 @@ TEST_F(InternalEmptyModel, Processes_Mortality_Instantaneous_Retained_Simple) {
 
   model_->Start(RunMode::kBasic);
 
-  vector<Double> expected = { 99998.976415, 89982.542510, 79719.128377, 67542.373295, 55997.579365, 46498.803312, 37191.693199, 27893.478988,
-      18595.642450, 9297.820941, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; // R code created by Ian, numbers match within 0.01% so using those numbers
+  vector<Double> expected = { 99999.999925, 89999.975887, 79992.977186, 69383.896068, 58003.792709, 47381.356345, 37262.300009, 27896.404689,
+      18595.745375, 9297.823635, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; // R code created by Ian, numbers match within 0.01% so using those numbers
 
   partition::Category& stock = model_->partition().category("male");
   for (unsigned i = 0; i < expected.size(); ++i) {
-//    EXPECT_DOUBLE_EQ(expected[i], stock.data_[i]) << " with i = " << i;
     EXPECT_NEAR(expected[i], stock.data_[i], 1e-6) << " with i = " << i;
   }
+
+  // Extra tests to look at total catch, retained catch, discards and discard mortality
+//  vector<Double> expected = {0, 0, 0, 0, 11769.5}; // R code created by Ian, numbers match within 0.01% so using those numbers
+
+  //partition::Category& fished = model_->process("Mortality").category("actual_catch[FishingPot]");
+  //for (unsigned i = 0; i < expected.size(); ++i) {
+    //EXPECT_NEAR(expected[i], fished.data_[i], 1e-6) << " with i = " << i;
+  //}
+
+
 }
 
 } /* namespace age */

@@ -155,6 +155,8 @@ private:
   // members for observations
   map<unsigned,  map<string, map<string, vector<Double>>>> removals_by_year_fishery_category_; // Year,  fishery, category
   map<unsigned,  map<string, map<string, vector<Double>>>> retained_by_year_fishery_category_; // Year,  fishery, category
+  map<unsigned,  map<string, map<string, vector<Double>>>> discards_by_year_fishery_category_; // Year,  fishery, category
+  map<unsigned,  map<string, map<string, vector<Double>>>> discard_mortality_by_year_fishery_category_; // Year,  fishery, category
 
   map<unsigned, map<string, vector<string>>> year_method_category_to_store_; // Year,  fishery, category
   // Members for reporting
