@@ -787,7 +787,7 @@ The total catch is found using by using a selectivity, $S_{f,a}$, in the same wa
 When the \texttt{mortality\_instantaneous\_retained} process is applied, the following equations are used:
 
 \begin{itemize}
-    \item Total catch (catch-on-board), $C_{f}$, is calculated by VF/VR*(retained catch), where VF is vulnerable retained biomass, $j$ indexes categories and $t$ is the proportion of M in the time-step, and VF is the full vulnerable biomass, $VF = \sum_{a,j} \overline{w}_{a} S_{a,j} n_{a,j} \exp(-0.5 t M_{a,j})$.
+    \item Total catch (catch-on-board), $C_{f}$, is calculated by (retained catch) * VF / VR, where VF is vulnerable retained biomass, $j$ indexes categories and $t$ is the proportion of M in the time-step, and VF is the full vulnerable biomass, $VF = \sum_{a,j} \overline{w}_{a} S_{a,j} n_{a,j} \exp(-0.5 t M_{a,j})$.
 
     \item An exploitation rate (actually a proportion) is calculated for each fishery, as the total catch (retained + discards) divided by the selected biomass (VF above) using selectivity $S_{f,a}$,
         $$ U_f = \frac{C_f}{\sum_a \bar{w}_a S_{f,a} n_a \exp(-0.5 t M_{a})}$$
