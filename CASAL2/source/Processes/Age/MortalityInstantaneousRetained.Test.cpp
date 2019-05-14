@@ -134,9 +134,9 @@ TEST_F(InternalEmptyModel, Processes_Mortality_Instantaneous_Retained_Simple) {
   }
 
   // Extra tests to look at total catch, retained catch, discards and discard mortality
-//  vector<Double> expected = {0, 0, 0, 0, 11769.5}; // R code created by Ian, numbers match within 0.01% so using those numbers
+  // vector<Double> expected2 = {0, 0, 0, 0, 11769.5}; // R code created by Ian, numbers match within 0.01% so using those numbers
 
-  //partition::Category& fished = model_->process("Mortality").category("actual_catch[FishingPot]");
+  // partition::Category& fished = model_->process("Mortality").category("actual_catch[FishingPot]");
   //for (unsigned i = 0; i < expected.size(); ++i) {
     //EXPECT_NEAR(expected[i], fished.data_[i], 1e-6) << " with i = " << i;
   //}

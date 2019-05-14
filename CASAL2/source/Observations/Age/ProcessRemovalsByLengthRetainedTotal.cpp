@@ -94,8 +94,26 @@ void ProcessRemovalsByLengthRetainedTotal::DoValidate() {
         LOG_ERROR_P(PARAM_LENGTH_BINS) << ": Length bins must be strictly increasing " << length_bins_[length] << " is greater than " << length_bins_[length + 1];
   }
 
+  // Check that length bins lie within range of model_->length_bins
+  vector<unsigned> model_length_bins = model_->length_bins(); // pull out model length bins
+  if (length_bins_[0] < model_length_bins[0])
+    LOG_ERROR_P(PARAM_LENGTH_BINS) << ": first length bin in observations is " << length_bins_[0] << " and in the overall model it is " << model_length_bins[0]
+      << ", please make sure that length bins in the model cover the full range of the observations.";
+  if (length_bins_[length_bins_.size() - 1] > model_length_bins[model_length_bins.size() - 1])
+    LOG_ERROR_P(PARAM_LENGTH_BINS) << ": last length bin in observations is " << length_bins_[length_bins_.size() - 1] << " and in the overall model it is " << model_length_bins[model_length_bins.size() - 1]
+      << ", please make sure that length bins in the model cover the full range of the observations.";
+
+  length_bin_offset_ = -1; // how many model bins before observation length bins start
+  int j = 0; // loop variable, start at first model length bin
+  while(length_bin_offset_ == -1) {
+    if (model_length_bins[j] == length_bins_[0])
+      length_bin_offset_ = j; // find bin corresponding to first observation bin
+    j += 1; // increase j by 1
+  }
+  LOG_FINEST() << "Length bin offset = " << length_bin_offset_; // print out
+
   if (process_error_values_.size() != 0 && process_error_values_.size() != years_.size()) {
-    LOG_ERROR_P(PARAM_PROCESS_ERRORS) << " number of values provied (" << process_error_values_.size() << ") does not match the number of years provided (" << years_.size() << ")";
+    LOG_ERROR_P(PARAM_PROCESS_ERRORS) << " number of values provided (" << process_error_values_.size() << ") does not match the number of years provided (" << years_.size() << ")";
   }
   for (Double process_error : process_error_values_) {
     if (process_error < 0.0)
@@ -338,7 +356,7 @@ void ProcessRemovalsByLengthRetainedTotal::Execute() {
         // Loop through the length bins and multiple the partition of the current age to go from
         // length frequencies to age length numbers
         for (unsigned j = 0; j < number_bins_; ++j) {
-          age_length_matrix[data_offset][j] = number_at_age * age_length_proportions[data_offset][j];
+          age_length_matrix[data_offset][j] = number_at_age * age_length_proportions[data_offset][length_bin_offset_ + j]; // added length bin offset to get correct length bin
           LOG_FINEST() << "The proportion of fish in length bin : " << length_bins_[j] << " = " << age_frequencies[j];
         }
       }

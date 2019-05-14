@@ -814,6 +814,9 @@ void MortalityInstantaneousRetained::FillReportCache(ostringstream& cache) {
     cache << "\nactual_catch[" << fishery.label_ << "]: ";
     for (auto catches : fishery.actual_catches_)
       cache << catches.second << " ";
+    cache << "\nretained_catch[" << fishery.label_ << "]: ";
+    for (auto retained : fishery.retained_catches_)
+      cache << retained.second << " ";
     cache << "\nactual_retained_catch[" << fishery.label_ << "]: ";
     for (auto retained : fishery.actual_retained_catches_)
       cache << retained.second << " ";

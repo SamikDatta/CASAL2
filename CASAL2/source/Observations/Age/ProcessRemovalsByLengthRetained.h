@@ -53,6 +53,7 @@ protected:
   vector<Double>                length_bins_;
   bool                          length_plus_ = false;
   unsigned                      number_bins_ = 0;
+  int                           length_bin_offset_ = 0;
   parameters::Table*            obs_table_ = nullptr;
   Double                        tolerance_ = 0.0;
   vector<Double>                process_error_values_;
