@@ -225,8 +225,7 @@ void Partition::BuildAgeLengthProportions() {
             sigma = sqrt(Lvar);
           }
 
-          for (Double value : length_bins)
-            LOG_FINEST() << "length_bin: " << value;
+          LOG_FINEST() << "age: " << age;
           LOG_FINEST() << "mu: " << mu;
           LOG_FINEST() << "sigma: " << sigma;
 
@@ -261,6 +260,7 @@ void Partition::BuildAgeLengthProportions() {
             }
             if (j > 0) {
               prop_in_length[j - 1] = cum[j] - cum[j - 1];
+              LOG_FINEST() << "prop_in_length[" << j-1 << "] = " << prop_in_length[j-1];
               sum += prop_in_length[j - 1];
             }
           } // for (unsigned j = 0; j < length_bin_count; ++j)
