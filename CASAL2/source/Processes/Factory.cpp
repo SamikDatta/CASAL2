@@ -22,7 +22,6 @@
 #include "Processes/Age/MortalityEvent.h"
 #include "Processes/Age/MortalityEventBiomass.h"
 #include "Processes/Age/MortalityInstantaneous.h"
-#include "Processes/Age/MortalityInstantaneousRetained.h"
 #include "Processes/Age/MortalityInitialisationEvent.h"
 #include "Processes/Age/MortalityInitialisationEventBiomass.h"
 #include "Processes/Age/MortalityPreySuitability.h"
@@ -39,6 +38,8 @@
 #include "Processes/Length/GrowthBasic.h"
 #include "Processes/Length/MortalityConstantRate.h"
 #include "Processes/Length/RecruitmentConstant.h"
+#include "Age/MortalityInstantaneousRetained.h"
+#include "Age/MortalityInstantaneousRetained2.h"
 
 
 // Namespaces
@@ -102,6 +103,8 @@ Process* Factory::Create(Model* model, const string& object_type, const string& 
           result = new age::MortalityInstantaneous(model);
         else if (sub == PARAM_MORTALITY_INSTANTANEOUS_RETAINED)
           result = new age::MortalityInstantaneousRetained(model);
+        else if (sub == PARAM_MORTALITY_INSTANTANEOUS_RETAINED2)
+          result = new age::MortalityInstantaneousRetained2(model);
         else if (sub == PARAM_MORTALITY_HOLLING_RATE)
           result = new age::MortalityHollingRate(model);
         else if (sub == PARAM_PREY_SUITABILITY_PREDATION)

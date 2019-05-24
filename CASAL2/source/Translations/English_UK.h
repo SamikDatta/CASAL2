@@ -418,6 +418,7 @@
 #define PARAM_MORTALITY_EVENT_BIOMASS             "mortality_event_biomass"
 #define PARAM_MORTALITY_INSTANTANEOUS             "mortality_instantaneous"
 #define PARAM_MORTALITY_INSTANTANEOUS_RETAINED    "mortality_instantaneous_retained"
+#define PARAM_MORTALITY_INSTANTANEOUS_RETAINED2   "mortality_instantaneous_retained2"
 #define PARAM_MORTALITY_INITIALISATION_EVENT      "mortality_initialisation_event"
 #define PARAM_MORTALITY_INITIALISATION_EVENT_BIOMSS "mortality_initialisation_event_biomass"
 #define PARAM_MORTALITY_INSTANTANEOUS_PROCESS     "mortality_instantaneous_process"
