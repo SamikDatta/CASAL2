@@ -1,12 +1,11 @@
 /**
- * @file MortalityInstantaneousRetained .cpp
- * @author Scott Rasmussen (scott.rasmussen@zaita.com)
- * I Doonan
+ * @file MortalityInstantaneousRetained.cpp
+ * @author Samik Datta and Craig Marsh (samik.datta@niwa.co.nz)
  * @github https://github.com/Zaita
- * @date 28/07/2015
+ * @date 26/06/2019
  * @section LICENSE
  *
- * Copyright NIWA Science �2015 - www.niwa.co.nz
+ * Copyright NIWA Science 2019 - www.niwa.co.nz
  *
  */
 
@@ -61,7 +60,7 @@ MortalityInstantaneousRetained::MortalityInstantaneousRetained(Model* model)
   parameters_.BindTable(PARAM_METHOD, method_table_, "Table of Method of removal data", "", true, false);
   parameters_.Bind<Double>(PARAM_M, &m_input_, "Natural mortality rates for each category", "")->set_range(0.0, 1.0);
   parameters_.Bind<Double>(PARAM_TIME_STEP_RATIO, &time_step_ratios_temp_, "Time step ratios for natural mortality", "", true);
-  parameters_.Bind<string>(PARAM_SELECTIVITIES, &selectivity_labels_, "The selectivities (M-ogives) to apply on the categories for natural mortality", "");
+  parameters_.Bind<string>(PARAM_SELECTIVITIES, &selectivity_labels_, "The selectivities to apply on the categories for natural mortality", "");
 
   RegisterAsAddressable(PARAM_M, &m_);
 }
@@ -125,10 +124,10 @@ void MortalityInstantaneousRetained::DoValidate() {
    * aspect of the process.
    */
   if (selectivity_labels_.size() == 1)
-      selectivity_labels_.assign(category_labels_.size(), selectivity_labels_[0]);  // M-ogives? 1/category
+      selectivity_labels_.assign(category_labels_.size(), selectivity_labels_[0]);
   if (selectivity_labels_.size() != category_labels_.size()) {
     LOG_FATAL_P(PARAM_SELECTIVITIES)
-        << ": Number of selectivities (M-ogives) provided is not the same as the number of categories provided. Expected: "
+        << ": Number of selectivities provided is not the same as the number of categories provided. Expected: "
         << category_labels_.size()<< " but got " << selectivity_labels_.size();
   }
 
@@ -150,7 +149,7 @@ void MortalityInstantaneousRetained::DoValidate() {
     CategoryData category;
     category.category_label_ = label;
     category.m_ = &m_[label];
-    category.selectivity_label_ = selectivity_labels_[i]; // M-ogive
+    category.selectivity_label_ = selectivity_labels_[i];
 
     categories_[i]= category;
     category_data_[label] = &categories_[i];
@@ -177,10 +176,6 @@ void MortalityInstantaneousRetained::DoValidate() {
     LOG_FATAL_P(PARAM_METHOD) << "Cannot find the column " << PARAM_CATEGORY << ", this column is needed, for casal2 to run this process. Please add it =)";
   if (std::find(columns.begin(), columns.end(), PARAM_SELECTIVITY) == columns.end())
     LOG_FATAL_P(PARAM_METHOD) << "Cannot find the column " << PARAM_SELECTIVITY << ", this column is needed, for casal2 to run this process. Please add it =)";
-  if (std::find(columns.begin(), columns.end(), PARAM_RETAINED_SELECTIVITY) == columns.end())
-    LOG_FATAL_P(PARAM_METHOD) << "Cannot find the column " << PARAM_RETAINED_SELECTIVITY << ", this column is needed, for casal2 to run this process. Please add it =)";
-  if (std::find(columns.begin(), columns.end(), PARAM_DISCARD_MORTALITY_SELECTIVITY) == columns.end())
-    LOG_FATAL_P(PARAM_METHOD) << "Cannot find the column " << PARAM_DISCARD_MORTALITY_SELECTIVITY << ", this column is needed, for casal2 to run this process. Please add it =)";
   if (std::find(columns.begin(), columns.end(), PARAM_TIME_STEP) == columns.end())
     LOG_FATAL_P(PARAM_METHOD) << "Cannot find the column " << PARAM_TIME_STEP << ", this column is needed, for casal2 to run this process. Please add it =)";
   if (std::find(columns.begin(), columns.end(), PARAM_U_MAX) == columns.end())
@@ -192,17 +187,23 @@ void MortalityInstantaneousRetained::DoValidate() {
     use_age_weight_ = false;
     LOG_FINE() << "Age weight column not found";
   }
+  if (std::find(columns.begin(), columns.end(), PARAM_RETAINED_SELECTIVITY) == columns.end())
+    LOG_FATAL_P(PARAM_METHOD) << "Cannot find the column " << PARAM_RETAINED_SELECTIVITY << ", this column is needed, for casal2 to run this process. Please add it =)";
+  if (std::find(columns.begin(), columns.end(), PARAM_DISCARD_MORTALITY_SELECTIVITY) == columns.end())
+    LOG_FATAL_P(PARAM_METHOD) << "Cannot find the column " << PARAM_DISCARD_MORTALITY_SELECTIVITY << ", this column is needed, for casal2 to run this process. Please add it =)";
 
-  
+
+
+
   unsigned fishery_index      = std::find(columns.begin(), columns.end(), PARAM_METHOD) - columns.begin();
   unsigned category_index     = std::find(columns.begin(), columns.end(), PARAM_CATEGORY) - columns.begin();
-  unsigned selectivity_index  = std::find(columns.begin(), columns.end(), PARAM_SELECTIVITY) - columns.begin();  //fishing selectivity
-  unsigned retained_selectivity_index = std::find(columns.begin(), columns.end(), PARAM_RETAINED_SELECTIVITY) - columns.begin();
-  unsigned discard_mortality_selectivity_index = std::find(columns.begin(), columns.end(), PARAM_DISCARD_MORTALITY_SELECTIVITY) - columns.begin();
+  unsigned selectivity_index  = std::find(columns.begin(), columns.end(), PARAM_SELECTIVITY) - columns.begin();
   unsigned time_step_index    = std::find(columns.begin(), columns.end(), PARAM_TIME_STEP) - columns.begin();
   unsigned u_max_index        = std::find(columns.begin(), columns.end(), PARAM_U_MAX) - columns.begin();
   unsigned penalty_index      = std::find(columns.begin(), columns.end(), PARAM_PENALTY) - columns.begin();
   unsigned age_weight_index = 999;
+  unsigned retained_selectivity_index = std::find(columns.begin(), columns.end(), PARAM_RETAINED_SELECTIVITY) - columns.begin();
+  unsigned discard_mortality_selectivity_index = std::find(columns.begin(), columns.end(), PARAM_DISCARD_MORTALITY_SELECTIVITY) - columns.begin();
 
   if (use_age_weight_)
     age_weight_index   = std::find(columns.begin(), columns.end(), PARAM_AGE_WEIGHT_LABEL) - columns.begin();
@@ -222,7 +223,6 @@ void MortalityInstantaneousRetained::DoValidate() {
       LOG_ERROR_P(PARAM_METHOD) << "u_max value " << row[u_max_index] << " is not numeric";
     if (fishery_year_catch.find(new_fishery.label_) == fishery_year_catch.end())
       LOG_ERROR_P(PARAM_METHOD) << "fishery " << new_fishery.label_ << " does not have catch information in the catches table";
-		
     new_fishery.catches_                 = fishery_year_catch[new_fishery.label_];  //discards+retained; discards estimated
     new_fishery.retained_catches_        = fishery_year_catch[new_fishery.label_];  // set to obs data
     new_fishery.actual_retained_catches_ = fishery_year_catch[new_fishery.label_];  // if different
@@ -230,7 +230,7 @@ void MortalityInstantaneousRetained::DoValidate() {
 
     fisheries_[new_fishery.label_] = new_fishery;
     
-    RegisterAsAddressable(PARAM_METHOD + string("_") + utilities::ToLowercase(new_fishery.label_), &fisheries_[new_fishery.label_].catches_); //<<<<<<<<<<<should be retained_catches_??
+    RegisterAsAddressable(PARAM_METHOD + string("_") + utilities::ToLowercase(new_fishery.label_), &fisheries_[new_fishery.label_].catches_);
 
     LOG_FINEST() << "Creating addressable: " << PARAM_FISHERY + string("_") + utilities::ToLowercase(new_fishery.label_), &fisheries_[new_fishery.label_].catches_;
     // remove after build
@@ -242,34 +242,38 @@ void MortalityInstantaneousRetained::DoValidate() {
 
     boost::split(categories, row[category_index], boost::is_any_of(","));
     boost::split(selectivities, row[selectivity_index], boost::is_any_of(","));
-    boost::split(retained_selectivities, row[retained_selectivity_index], boost::is_any_of(","));
-    boost::split(discard_mortality_selectivities, row[discard_mortality_selectivity_index], boost::is_any_of(","));
     if (use_age_weight_)
       boost::split(age_weights, row[age_weight_index], boost::is_any_of(","));
 
+    boost::split(retained_selectivities, row[retained_selectivity_index], boost::is_any_of(","));
+    boost::split(discard_mortality_selectivities, row[discard_mortality_selectivity_index], boost::is_any_of(","));
+
+    // Check selectiviiteis consistent with categories
     if (categories.size() != selectivities.size())
       LOG_FATAL_P(PARAM_METHOD) << "The number of categories (" << categories.size() << ") and selectivities (" << selectivities.size() << ") provided must be identical";
     if (categories.size() != retained_selectivities.size())
-      LOG_FATAL_P(PARAM_METHOD) << "The number of categories (" << categories.size() << ") and retained selectivities (" << retained_selectivities.size() << ") provided must be identical";
+      LOG_FATAL_P(PARAM_METHOD)<< "The number of categories (" << categories.size() << ") and retained selectivities (" << retained_selectivities.size() << ") provided must be identical";
     if (categories.size() != discard_mortality_selectivities.size())
       LOG_FATAL_P(PARAM_METHOD) << "The number of categories (" << categories.size() << ") and discard mortality selectivities (" << discard_mortality_selectivities.size() << ") provided must be identical";
 
+    // Create fishery category struct
     for (unsigned i = 0; i < categories.size(); ++i) {
       FisheryCategoryData new_category_data(fisheries_[new_fishery.label_], *category_data_[categories[i]]);
       new_category_data.fishery_label_     = row[fishery_index];
       new_category_data.category_label_    = categories[i];
-      new_category_data.retained_selectivity_label_ = retained_selectivities[i];
-      new_category_data.discard_mortality_selectivity_label_ = discard_mortality_selectivities[i];
       // check categories are in category_labels_ as well
-		  if (std::find(category_labels_.begin(), category_labels_.end(), categories[i]) == category_labels_.end())
-		  	LOG_ERROR_P(PARAM_METHOD) << "Found the category " << categories[i] << " in table but not in the '" << PARAM_CATEGORIES << "' subcommand, this means you are applying exploitation processes and not natural mortality, which is not currently allowed. Make sure all categories in the methods table are in the categories subcommand.";
-      new_category_data.selectivity_label_ = selectivities[i]; //fishing
+      if (std::find(category_labels_.begin(), category_labels_.end(), categories[i]) == category_labels_.end())
+        LOG_ERROR_P(PARAM_METHOD) << "Found the category " << categories[i] << " in table but not in the '" << PARAM_CATEGORIES << "' subcommand, this means you are applying exploitation processes and not natural mortality, which is not currently allowed. Make sure all categories in the methods table are in the categories subcommand.";
+      new_category_data.selectivity_label_ = selectivities[i];
       if (use_age_weight_)
         new_category_data.category_.age_weight_label_ = age_weights[i];
       else {
         new_category_data.category_.age_weight_label_ = PARAM_NONE;
         LOG_FINE() << "setting age weight label to none.";
       }
+      new_category_data.retained_selectivity_label_ = retained_selectivities[i];
+      new_category_data.discard_mortality_selectivity_label_ = discard_mortality_selectivities[i];
+
       fishery_categories_.push_back(new_category_data);
     }
   }
@@ -300,14 +304,14 @@ void MortalityInstantaneousRetained::DoBuild() {
     category.category_ = &model_->partition().category(category.category_label_);
     category.exploitation_.assign(category.category_->age_spread(), 0.0);
     category.exp_values_.assign(category.category_->age_spread(), 0.0);
-    category.selectivity_values_.assign(category.category_->age_spread(), 0.0); // M-ogive
+    category.selectivity_values_.assign(category.category_->age_spread(), 0.0);
   }
 
   for (auto& fishery_category : fishery_categories_) {
-    fishery_category.selectivity_values_.assign(fishery_category.category_.category_->age_spread(), 0.0); // fishing
-    fishery_category.retained_selectivity_values_.assign(fishery_category.category_.category_->age_spread(), 0.0); 
+    fishery_category.selectivity_values_.assign(fishery_category.category_.category_->age_spread(), 0.0);
+    fishery_category.retained_selectivity_values_.assign(fishery_category.category_.category_->age_spread(), 0.0);
     fishery_category.discard_mortality_selectivity_values_.assign(fishery_category.category_.category_->age_spread(), 0.0);
-	}
+  }
 
   /**
    * Organise our time step ratios. Each time step can
@@ -342,7 +346,7 @@ void MortalityInstantaneousRetained::DoBuild() {
    * Assign the selectivity, penalty and time step index to each fisher data object
    */
   for (auto& fishery_category : fishery_categories_) {
-    fishery_category.selectivity_ = model_->managers().selectivity()->GetSelectivity(fishery_category.selectivity_label_); //<<<<<<<<<<<<<<<<retained too
+    fishery_category.selectivity_ = model_->managers().selectivity()->GetSelectivity(fishery_category.selectivity_label_);
     /**
      * Check the fishery categories are valid
      */
@@ -350,15 +354,15 @@ void MortalityInstantaneousRetained::DoBuild() {
         LOG_ERROR_P(PARAM_METHOD) << ": category " << fishery_category.category_label_ << " does not exist. Have you defined it?";
 
     if (!fishery_category.selectivity_)
-      LOG_ERROR_P(PARAM_METHOD) << "fishing selectivity " << fishery_category.selectivity_label_ << " does not exist. Have you defined it?";
+      LOG_ERROR_P(PARAM_METHOD) << "selectivity " << fishery_category.selectivity_label_ << " does not exist. Have you defined it?";
 
     fishery_category.retained_selectivity_ = model_->managers().selectivity()->GetSelectivity(fishery_category.retained_selectivity_label_);
     if (!fishery_category.retained_selectivity_)
       LOG_ERROR_P(PARAM_METHOD) << "retained selectivity " << fishery_category.retained_selectivity_label_ << " does not exist. Have you defined it?";
-
     fishery_category.discard_mortality_selectivity_ = model_->managers().selectivity()->GetSelectivity(fishery_category.discard_mortality_selectivity_label_);
     if (!fishery_category.discard_mortality_selectivity_)
       LOG_ERROR_P(PARAM_METHOD) << "discard mortality selectivity " << fishery_category.discard_mortality_selectivity_label_ << " does not exist. Have you defined it?";
+
 
   }
 
@@ -388,7 +392,7 @@ void MortalityInstantaneousRetained::DoBuild() {
    */
   for (auto& category : categories_) {
     // Selectivity
-    Selectivity* selectivity = model_->managers().selectivity()->GetSelectivity(category.selectivity_label_);  //M-ogive
+    Selectivity* selectivity = model_->managers().selectivity()->GetSelectivity(category.selectivity_label_);
     if (!selectivity)
       LOG_ERROR_P(PARAM_SELECTIVITIES) << "selectivity " << category.selectivity_label_ << " does not exist. Have you defined it?";
     category.selectivity_ = selectivity;
@@ -419,7 +423,7 @@ void MortalityInstantaneousRetained::DoBuild() {
   unsigned i = 0;
   for (auto time_step : model_->managers().time_step()->ordered_time_steps()) {
     for (auto process : time_step->processes()) {
-      if (process->process_type() == ProcessType::kMortality && process->type() == PARAM_MORTALITY_INSTANTANEOUS_RETAINED) {
+      if (process->process_type() == ProcessType::kMortality && process->type() == PARAM_MORTALITY_INSTANTANEOUS) {
         LOG_FINEST() << "instant_mortality process in time step " << i;
         instant_mort_time_step.push_back(i);
       }
@@ -438,21 +442,20 @@ void MortalityInstantaneousRetained::DoBuild() {
       }
     }
     if (!fishery_in_timestep) {
-      time_steps_to_skip_applying_F_mortality_.push_back(time_step);
+      time_steps_to_skip_applying_F_mortaltiy_.push_back(time_step);
       LOG_FINEST() << "time step " << time_step << " doesn't have a method associated so we will skip the exploitation calculation during DoExecute";
     }
   }
 
   // reserve memory for reporting objects
-  removals_by_category_age_.resize(category_labels_.size()); 
-  discards_by_category_age_.resize(category_labels_.size());
+  removals_by_category_age_.resize(category_labels_.size());
   retained_by_category_age_.resize(category_labels_.size());
-  
+  discards_by_category_age_.resize(category_labels_.size());
 
   for (unsigned i = 0; i < category_labels_.size(); ++i) {
     removals_by_category_age_[i].resize(model_->age_spread());
+    retained_by_category_age_.resize(category_labels_.size());
     discards_by_category_age_[i].resize(model_->age_spread());
-    retained_by_category_age_[i].resize(model_->age_spread());
   }
 
 }
@@ -461,10 +464,10 @@ void MortalityInstantaneousRetained::DoBuild() {
  * Reset the M parameter
  */
 void MortalityInstantaneousRetained::DoReset() {
-	LOG_TRACE();
+  LOG_TRACE();
   unsigned m_iter = 0;
   for (auto m : m_) {
-  	LOG_FINEST() << "resetting M for category " << m.first << " = " << m.second;
+    LOG_FINEST() << "resetting M for category " << m.first << " = " << m.second;
     m_input_[m_iter] = m.second;
     ++m_iter;
   }
@@ -476,10 +479,10 @@ void MortalityInstantaneousRetained::DoReset() {
  * this avoids a full reset and clearing of printed values which is what was happening before
  */
 void MortalityInstantaneousRetained::RebuildCache() {
-	LOG_TRACE();
+  LOG_TRACE();
   unsigned m_iter = 0;
   for (auto m : m_) {
-  	LOG_FINEST() << "resetting M for category " << m.first << " = " << m.second;
+    LOG_FINEST() << "resetting M for category " << m.first << " = " << m.second;
     m_input_[m_iter] = m.second;
     ++m_iter;
   }
@@ -495,8 +498,7 @@ void MortalityInstantaneousRetained::DoExecute() {
   unsigned time_step_index = model_->managers().time_step()->current_time_step();
   unsigned year =  model_->current_year();
   Double ratio = time_step_ratios_[time_step_index];
-  Double selectivity_value = 0.0;  //fishing?NO
-//  Double retained_selectivity_value = 0.0;
+  Double selectivity_value = 0.0;
 
   for (auto& category : categories_) {
     // Is this category used?
@@ -508,17 +510,11 @@ void MortalityInstantaneousRetained::DoExecute() {
       category.used_in_current_timestep_ = used;
 
       for (unsigned i = 0; i < category.category_->age_spread(); ++i) {
-        selectivity_value = category.selectivity_->GetAgeResult(category.category_->min_age_ + i, category.category_->age_length_);                   // S[a,j] age-category
+        selectivity_value = category.selectivity_->GetAgeResult(category.category_->min_age_ + i, category.category_->age_length_);
         category.exploitation_[i] = 0.0;
         category.selectivity_values_[i] = selectivity_value;
         if (used)
-          category.exp_values_[i] = exp(-0.5 * ratio * (*category.m_) * selectivity_value);  //category.m_) * selectivity_value = age varying M
-	  
-//        retained_selectivity_value = category.retained_selectivity_->GetAgeResult(category.category_->min_age_ + i, category.category_->age_length_); //R[a,j]
-//        category.retained_exploitation_[i] = 0.0;
-//        category.retained_selectivity_values_[i] = retained_selectivity_value;
-//        if (used)
-//          category.retained_exp_values_[i] = exp(-0.5 * ratio * (*category.m_) * retained_selectivity_value)* selectivity_value;
+          category.exp_values_[i] = exp(-0.5 * ratio * (*category.m_) * selectivity_value);
       }
     }
   }
@@ -529,79 +525,72 @@ void MortalityInstantaneousRetained::DoExecute() {
 
     for (unsigned i = 0; i < fishery_category.selectivity_values_.size(); ++i)
       fishery_category.selectivity_values_[i] = fishery_category.selectivity_->GetAgeResult(fishery_category.category_.category_->min_age_ + i, fishery_category.category_.category_->age_length_);
-
     for (unsigned i = 0; i < fishery_category.retained_selectivity_values_.size(); ++i)
       fishery_category.retained_selectivity_values_[i] = fishery_category.retained_selectivity_->GetAgeResult(fishery_category.category_.category_->min_age_ + i, fishery_category.category_.category_->age_length_);
-
     for (unsigned i = 0; i < fishery_category.discard_mortality_selectivity_values_.size(); ++i)
       fishery_category.discard_mortality_selectivity_values_[i] = fishery_category.discard_mortality_selectivity_->GetAgeResult(fishery_category.category_.category_->min_age_ + i, fishery_category.category_.category_->age_length_);
   }
 
-  for (auto& fishery : fisheries_){
-    fishery.second.vulnerability_          = 0.0;  // zero out for accumulation over categories in the fishery
+  for (auto& fishery : fisheries_) {
+    fishery.second.total_vulnerability_ = 0.0;
     fishery.second.retained_vulnerability_ = 0.0;
+
   }
- 
+
   /**
    * Loop for each category. Add the vulnerability from each
    * category in to the fisheries it belongs too
    */
-  if (model_->state() != State::kInitialise || (find(time_steps_to_skip_applying_F_mortality_.begin(),time_steps_to_skip_applying_F_mortality_.end(), time_step_index) != time_steps_to_skip_applying_F_mortality_.end())) {
+  if (model_->state() != State::kInitialise || (find(time_steps_to_skip_applying_F_mortaltiy_.begin(),time_steps_to_skip_applying_F_mortaltiy_.end(), time_step_index) != time_steps_to_skip_applying_F_mortaltiy_.end())) {
     LOG_FINEST() << "time step = " << time_step_index << " not in initialisation and there is an F method in this timestep.";
-    for (auto& fishery_category : fishery_categories_) {
-      LOG_FINEST() << "checking fishery = " << fishery_category.fishery_label_;
-      if (fishery_category.fishery_.time_step_index_ != time_step_index)
-        continue;
+      for (auto& fishery_category : fishery_categories_) {
+        LOG_FINEST() << "checking fishery = " << fishery_category.fishery_label_;
+        if (fishery_category.fishery_.time_step_index_ != time_step_index)
+          continue;
+        LOG_FINEST() << "name = " << fishery_category.category_label_;
 
-      partition::Category* category = fishery_category.category_.category_;
-      if (fishery_category.category_.age_weight_) {
-        for (unsigned i = 0; i < category->data_.size(); ++i) {
-          Double vulnerable = category->data_[i]             //N[age,category=j]
-              * fishery_category.category_.age_weight_->mean_weight_at_age_by_year(year, i + model_->min_age())
-              * fishery_category.selectivity_values_[i]     //fishing
-              * fishery_category.category_.exp_values_[i];  //exp^(0.5 * M_adjusted for age & ratio in time step)
-
-          fishery_category.fishery_.vulnerability_ += vulnerable;  //all catch = WF in notes
-			
-          Double retained_vulnerable = vulnerable * fishery_category.retained_selectivity_values_[i];     //adjust to retained catch = RW in notes
-                				
-          fishery_category.fishery_.retained_vulnerability_ += retained_vulnerable;
-
-        }
-      } else {
+        partition::Category* category = fishery_category.category_.category_;
+        if (fishery_category.category_.age_weight_) {
           for (unsigned i = 0; i < category->data_.size(); ++i) {
+            Double vulnerable = category->data_[i]
+                * fishery_category.category_.age_weight_->mean_weight_at_age_by_year(year, i + model_->min_age())
+                * fishery_category.selectivity_values_[i]
+                * fishery_category.category_.exp_values_[i];
+
+            fishery_category.fishery_.total_vulnerability_ += vulnerable;
+            fishery_category.fishery_.retained_vulnerability_ += vulnerable * fishery_category.retained_selectivity_values_[i];
+          }
+        } else {
+          for (unsigned i = 0; i < category->data_.size(); ++i) {
+            LOG_FINEST() << "i = " << i << " selectivity = " << fishery_category.selectivity_values_[i] << " numbers at age = " << category->data_[i] << " exp values = " << fishery_category.category_.exp_values_[i] << " mean weight = " << category->mean_weight_by_time_step_age_[time_step_index][category->min_age_ + i];
+
             Double vulnerable = category->data_[i]
                 * category->mean_weight_by_time_step_age_[time_step_index][category->min_age_ + i]
                 * fishery_category.selectivity_values_[i]
                 * fishery_category.category_.exp_values_[i];
 
-            fishery_category.fishery_.vulnerability_ += vulnerable;
-			
-            Double retained_vulnerable = vulnerable * fishery_category.retained_selectivity_values_[i];     //adjust to retained catch
-                				
-            fishery_category.fishery_.retained_vulnerability_ += retained_vulnerable;
+            fishery_category.fishery_.total_vulnerability_ += vulnerable;
+            fishery_category.fishery_.retained_vulnerability_ += vulnerable * fishery_category.retained_selectivity_values_[i];          }
+        }
+        LOG_FINEST() << "Category is fished in this time_step " << time_step_index << " numbers at age = " << category->data_.size();
+        LOG_FINEST() << "Vulnerable biomass from category " << category->name_ << " contributing to fishery " << fishery_category.fishery_label_ << " = " << fishery_category.fishery_.retained_vulnerability_ << " total retained vulnerable = " << fishery_category.fishery_.total_vulnerability_ ;
+        fishery_category.fishery_.total_vulnerable_by_year_[year] = fishery_category.fishery_.total_vulnerability_;
+        fishery_category.fishery_.retained_vulnerable_by_year_[year] = fishery_category.fishery_.retained_vulnerability_;
 
-          }
       }
-      LOG_FINEST() << "Category is fished in this time_step " << time_step_index << " numbers at age = " << category->data_.size();
-      LOG_FINEST() << "Vulnerable biomass from category " << category->name_ << " contributing to fishery " << fishery_category.fishery_label_ << " = " << fishery_category.fishery_.vulnerability_;
-    }
 
     /**
-     * Work out the exploitation rate to remove (catch/vulnerable) for each fishery; 
-	 * catch is all catch and must be estimated using retained catch first
+     * Work out the exploitation rate to remove (catch/vulnerable) for each fishery
      */
-	 
-	 
     for (auto& fishery_iter : fisheries_) {
       auto& fishery = fishery_iter.second;
       Double exploitation = 0.0;
       // If fishery occurs in this time step calculate exploitation rate
       if (fishery.time_step_index_ == time_step_index) {
-        fishery.catches_[year] = fishery.retained_catches_[year] * fishery.vulnerability_ / utilities::doublecompare::ZeroFun(fishery.retained_vulnerability_);
-        exploitation = fishery.catches_[year] / utilities::doublecompare::ZeroFun(fishery.vulnerability_);
-        LOG_FINEST() << "Vulnerable biomass for fishery: " << fishery.label_ << " = " << fishery.vulnerability_ << " with catch = " << fishery.catches_[year] << ", = exploitation = "
-            << exploitation << ", retained_vulnerability " << fishery.retained_vulnerability_ << ", with retained catch = " << fishery.retained_catches_[year];
+        fishery.catches_[year] = fishery.retained_catches_[year] * fishery.total_vulnerability_ / utilities::doublecompare::ZeroFun(fishery.retained_vulnerability_);
+        exploitation = fishery.catches_[year] / utilities::doublecompare::ZeroFun(fishery.total_vulnerability_); // like first process (except with "total_")
+//        exploitation = fishery.catches_[year] / utilities::doublecompare::ZeroFun(fishery.retained_vulnerability_);
+        LOG_FINEST() << " Vulnerable biomass for fishery : " << fishery.label_ << " = " << fishery.retained_vulnerability_ << " with Catch = " << fishery.catches_[model_->current_year()] << " = exploitation = " << exploitation;
       }
 
       fishery.exploitation_ = exploitation;
@@ -613,7 +602,8 @@ void MortalityInstantaneousRetained::DoExecute() {
 
       partition::Category* category = fishery_category.category_.category_;
       for (unsigned i = 0; i < category->data_.size(); ++i) {
-        fishery_category.category_.exploitation_[i] += fishery_category.fishery_.exploitation_ * fishery_category.selectivity_values_[i];
+        fishery_category.category_.exploitation_[i] += fishery_category.fishery_.exploitation_ * fishery_category.selectivity_values_[i]; // like first process
+//        fishery_category.category_.exploitation_[i] += fishery_category.fishery_.exploitation_ * fishery_category.selectivity_values_[i] * (fishery_category.retained_selectivity_->GetAgeResult(category->min_age_ + i, category->age_length_) + (fishery_category.discard_selectivity_->GetAgeResult(category->min_age_ + i, category->age_length_)) * (1 - fishery_category.retained_selectivity_->GetAgeResult(category->min_age_ + i, category->age_length_)));
       }
     }
 
@@ -640,6 +630,7 @@ void MortalityInstantaneousRetained::DoExecute() {
         }
       }
     }
+    LOG_FINE() << "are we here?";
 
     for (auto& fishery_iter : fisheries_) {
       auto& fishery = fishery_iter.second;
@@ -649,24 +640,26 @@ void MortalityInstantaneousRetained::DoExecute() {
          */
         LOG_FINE() << fishery.label_ << " exploitation rate before rescaling = " << fishery.exploitation_ << " uobs = " << fishery.uobs_fishery_;
         fishery.exploitation_ *= (fishery.u_max_ / fishery.uobs_fishery_); // This may seem weird to be greater than u_max but later we multiply it by the selectivity which scales it to U_max
-        		
         LOG_FINE() << "fishery = " << fishery.label_ << " U_obs = " << fishery.uobs_fishery_ << " and u_max " << fishery.u_max_;
         LOG_FINE() << fishery.label_ << " Rescaled exploitation rate = " << fishery.exploitation_;
         recalculate_age_exploitation = true;
-        fishery.actual_catches_[year] = fishery.vulnerability_ * fishery.exploitation_;
+        fishery.actual_catches_[year] = fishery.total_vulnerability_ * fishery.exploitation_;
         fishery.actual_retained_catches_[year] = fishery.retained_vulnerability_ * fishery.exploitation_;
+//        fishery.discards_[year] = fishery.total_vulnerability_ * fishery.exploitation_ - fishery.actual_catches_[year];
+
         fishery.exploitation_by_year_[year] = fishery.exploitation_;
         if (fishery.penalty_)
-          fishery.penalty_->Trigger(label_, fishery.catches_[year], fishery.actual_catches_[year]); // could do this on retained catch since this is obs
+          fishery.penalty_->Trigger(label_, fishery.catches_[year], fishery.actual_catches_[year]);
       } else {
-        fishery.actual_catches_[year]          = fishery.catches_[year];
+				fishery.actual_catches_[year]          = fishery.catches_[year];
         fishery.actual_retained_catches_[year] = fishery.retained_catches_[year];
         fishery.exploitation_by_year_[year] = fishery.uobs_fishery_;
       }
-      fishery.discards_[year] = fishery.catches_[year] - fishery.retained_catches_[year];
+      fishery.discards_[year] = fishery.actual_catches_[year] - fishery.actual_retained_catches_[year]; // simpler calculation
       fishery.discards_dead_[year] = 0; // reset for loop ahead
     }
 
+    LOG_FINE() << "what about here";
     /**
      * recalculate age exploitation if we triggered penalty
      */
@@ -682,122 +675,97 @@ void MortalityInstantaneousRetained::DoExecute() {
       for (auto& fishery_category : fishery_categories_) {
         partition::Category* category = fishery_category.category_.category_;
         for (unsigned i = 0; i < category->data_.size(); ++i) {
-          fishery_category.category_.exploitation_[i] += fishery_category.fishery_.exploitation_ * fishery_category.selectivity_values_[i];
+          fishery_category.category_.exploitation_[i] += fishery_category.fishery_.exploitation_ * fishery_category.selectivity_values_[i]; // like first process
+//          fishery_category.category_.exploitation_[i] += fishery_category.fishery_.exploitation_ * fishery_category.selectivity_values_[i] * (fishery_category.retained_selectivity_->GetAgeResult(category->min_age_ + i, category->age_length_) + (fishery_category.discard_selectivity_->GetAgeResult(category->min_age_ + i, category->age_length_)) * (1 - fishery_category.retained_selectivity_->GetAgeResult(category->min_age_ + i, category->age_length_)));
         }
       }
     }
+    LOG_FINE() << "adjusted";
+
     /**
      * Calculate the expectation for a proportions_at_age observation
      *
      */
-	 
-	/* not needed?
-    if (not include_discards_) {
-      unsigned age_spread = model_->age_spread();
-      unsigned category_offset = 0;
-      for (auto& categories : partition_) {
-        for (auto& fishery_category : fishery_categories_) {
+
+    unsigned age_spread = model_->age_spread();
+    unsigned category_offset = 0;
+    for (auto& categories : partition_) {
+      for (auto& fishery_category : fishery_categories_) {
         if (fishery_category.category_label_ == categories->name_ && fisheries_[fishery_category.fishery_label_].time_step_index_ == time_step_index) {
           removals_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_].assign(age_spread, 0.0);
-          for (unsigned i = 0; i < age_spread; ++i) {
-          unsigned age_offset = categories->min_age_ - model_->min_age();
-          if (i < age_offset)
-            continue;
-          removals_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_][i] += categories->data_[i - age_offset]
-    //                * fishery_exploitation[fishery_category.fishery_label_]
-            * fishery_category.fishery_.exploitation_
-            * fishery_category.selectivity_->GetAgeResult(categories->min_age_ + i, categories->age_length_)
-            * exp(-0.5 * ratio * m_[categories->name_] * selectivities_[category_offset]->GetAgeResult(categories->min_age_ + i, categories->age_length_));
-          }
-        }
-        }
-        category_offset++;
-      }
-    } else {
-	*/
-	
-      unsigned age_spread = model_->age_spread();
-      unsigned category_offset = 0;
-      for (auto& categories : partition_) {
-        for (auto& fishery_category : fishery_categories_) {
-          if (fishery_category.category_label_ == categories->name_ && fisheries_[fishery_category.fishery_label_].time_step_index_ == time_step_index) {
-            removals_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_].assign(age_spread, 0.0);
-            retained_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_].assign(age_spread, 0.0);
-            discards_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_].assign(age_spread, 0.0);
-            discard_mortality_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_].assign(age_spread, 0.0);
+          retained_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_].assign(age_spread, 0.0);
+          discards_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_].assign(age_spread, 0.0);
+          discard_mortality_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_].assign(age_spread, 0.0);
 
-            for (unsigned i = 0; i < age_spread; ++i) {
-              unsigned age_offset = categories->min_age_ - model_->min_age();
-              if (i < age_offset)
-                continue;
-              removals_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_][i] = categories->data_[i - age_offset]
-                * fishery_category.fishery_.exploitation_
-                * fishery_category.selectivity_->GetAgeResult(categories->min_age_ + i, categories->age_length_)
-                * exp(-0.5 * ratio * m_[categories->name_] * selectivities_[category_offset]->GetAgeResult(categories->min_age_ + i, categories->age_length_));
-              retained_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_][i] = removals_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_][i]
-                * fishery_category.retained_selectivity_->GetAgeResult(categories->min_age_ + i, categories->age_length_);
-              discards_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_][i] = removals_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_][i] - retained_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_][i];
-              discard_mortality_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_][i] =
-                  fishery_category.discard_mortality_selectivity_values_[i] * discards_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_][i];
-              // fishery_category.fishery_.actual_discards_dead_[year] += discard_mortality_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_][i];
-//              retained_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_][i] += categories->data_[i - age_offset]
-//                * fishery_category.fishery_.exploitation_
-//                * fishery_category.selectivity_->GetAgeResult(categories->min_age_ + i, categories->age_length_)
-//                * fishery_category.retained_selectivity_->GetAgeResult(categories->min_age_ + i, categories->age_length_)
-//                * exp(-0.5 * ratio * m_[categories->name_] * selectivities_[category_offset]->GetAgeResult(categories->min_age_ + i, categories->age_length_));
-            }
+          for (unsigned i = 0; i < age_spread; ++i) {
+            unsigned age_offset = categories->min_age_ - model_->min_age();
+            if (i < age_offset)
+              continue;
+            removals_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_][i] = categories->data_[i - age_offset]
+              * fishery_category.fishery_.exploitation_
+              * fishery_category.selectivity_->GetAgeResult(categories->min_age_ + i, categories->age_length_)
+              * exp(-0.5 * ratio * m_[categories->name_] * selectivities_[category_offset]->GetAgeResult(categories->min_age_ + i, categories->age_length_));
+            retained_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_][i] = removals_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_][i]
+              * fishery_category.retained_selectivity_->GetAgeResult(categories->min_age_ + i, categories->age_length_);
+            discards_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_][i] = removals_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_][i] - retained_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_][i];
+            discard_mortality_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_][i] =
+                fishery_category.discard_mortality_selectivity_values_[i] * discards_by_year_fishery_category_[year][fishery_category.fishery_label_][categories->name_][i];
+         }
+        }
+      }
+      category_offset++;
+    }
+
+    // Record discard mortality per year
+    Double fishing_summation = 0; // dummy variable for summing up contribution from different fisheries to age group
+    Double total_catch_by_age = 0; // dummy variable for viewing total catch
+    Double discards_dead_by_age = 0; // dummy variable for viewing total catch
+    for (auto& category : categories_) { // over all categories (e.g. male / female, immature / mature)
+      for (unsigned i = 0; i < category.category_->data_.size(); ++i) { // over all ages
+        LOG_FINEST() << "Age " << i + model_->min_age();
+        for (auto& fishery_category : fishery_categories_) { // over all fisheries
+          if (fishery_category.category_label_ == category.category_label_ && fishery_category.fishery_.time_step_index_ == time_step_index) { // if fishing occurs on this category at this time
+            LOG_FINEST() << "Numbers before: " << category.category_->data_[i];
+            LOG_FINEST() << "category.selectivity_values_[i] = " << category.selectivity_values_[i];
+            LOG_FINEST() << "fishery_category.selectivity_values_[i] = " << fishery_category.selectivity_values_[i];
+            LOG_FINEST() << "fishery_category.fishery_.exploitation_ = " << fishery_category.fishery_.exploitation_;
+            LOG_FINEST() << "mean weight by age = " << fishery_category.category_.category_->mean_weight_by_time_step_age_[time_step_index][i + model_->min_age()];
+            total_catch_by_age = category.category_->data_[i] * exp(-0.5 * (*category.m_) * ratio * category.selectivity_values_[i])
+                        * fishery_category.selectivity_values_[i] * fishery_category.fishery_.exploitation_
+                        * fishery_category.category_.category_->mean_weight_by_time_step_age_[time_step_index][i + model_->min_age()];
+            LOG_FINE() << "Total catch: " << total_catch_by_age;
+            discards_dead_by_age = fishery_category.discard_mortality_selectivity_values_[i] * total_catch_by_age * (1 - fishery_category.retained_selectivity_values_[i]); // correct calculation?
+            LOG_FINE() << "Discards dead: " << discards_dead_by_age;
+            fishery_category.fishery_.discards_dead_[year] += discards_dead_by_age;
+            fishing_summation += fishery_category.selectivity_values_[i] * fishery_category.fishery_.exploitation_
+                * (fishery_category.retained_selectivity_values_[i] + fishery_category.discard_mortality_selectivity_values_[i] * (1 - fishery_category.retained_selectivity_values_[i]));
+            LOG_FINEST() << "Total fishing summation: " << fishing_summation;
           }
         }
-        category_offset++;
       }
     }
 
-  // if (model_->state() != State::kInitialise )
-
-
-  //removals_by_year_category_age_[model_->current_year()] = removals_by_category_age_;
+  } // if (model_->state() != State::kInitialise )
 
   /**
    * Remove the stock now using the exploitation rate
    */
-  Double fishing_summation = 0; // dummy variable for summing up contribution from different fisheries to age group
-  Double total_catch_by_age = 0; // dummy variable for viewing total catch
-  Double discards_dead_by_age = 0; // dummy variable for viewing total catch
-  for (auto& category : categories_) { // over all categories (e.g. male / female, immature / mature)
-    LOG_FINEST() << "Name of category: " << category.category_label_;
-    for (unsigned i = 0; i < category.category_->data_.size(); ++i) { // over all ages
-      LOG_FINEST() << "Age " << i + model_->min_age() << " = " << category.category_->data_[i] << ", M = " << *category.m_;
-      fishing_summation = 0; // reset summation
-      for (auto& fishery_category : fishery_categories_) { // over all fisheries
-        if (fishery_category.category_label_ == category.category_label_ && fishery_category.fishery_.time_step_index_ == time_step_index) { // if fishing occurs on this category at this time
-          //        removals_by_category_age_[category_ndx][i] = category.category_->data_[i]; // initial numbers before process
-          LOG_FINEST() << "Name of fishery: " << fishery_category.fishery_label_;
-          LOG_FINEST() << "Category being fished: " << fishery_category.category_label_;
-          LOG_FINEST() << "Exploitation: " << fishery_category.fishery_.exploitation_;
-          LOG_FINEST() << "Selectivities: total = " << fishery_category.selectivity_values_[i] <<  ", retained = " << fishery_category.retained_selectivity_values_[i] << ", discard mortality = " << fishery_category.discard_mortality_selectivity_values_[i];
-          // category.category_->data_[i] *= exp(-(*category.m_) * ratio * category.selectivity_values_[i]) * (1 - category.exploitation_[i]); // old calculation (wrong?)
-          LOG_FINEST() << "Numbers before: " << category.category_->data_[i];
-          total_catch_by_age = category.category_->data_[i] * exp(-0.5 * (*category.m_) * ratio * category.selectivity_values_[i])
-                      * fishery_category.selectivity_values_[i] * fishery_category.fishery_.exploitation_
-                      * fishery_category.category_.category_->mean_weight_by_time_step_age_[time_step_index][i + model_->min_age()];
-          LOG_FINEST() << "Total catch: " << total_catch_by_age;
-          discards_dead_by_age = fishery_category.discard_mortality_selectivity_values_[i] * total_catch_by_age * (1 - fishery_category.retained_selectivity_values_[i]); // correct calculation?
-          LOG_FINEST() << "Discards dead: " << discards_dead_by_age;
-          fishery_category.fishery_.discards_dead_[year] += discards_dead_by_age;
-          fishing_summation += fishery_category.selectivity_values_[i] * fishery_category.fishery_.exploitation_
-              * (fishery_category.retained_selectivity_values_[i] + fishery_category.discard_mortality_selectivity_values_[i] * (1 - fishery_category.retained_selectivity_values_[i]));
-        }
-      }
-      LOG_FINEST() << "Total fishing summation: " << fishing_summation;
-      category.category_->data_[i] *= exp(-(*category.m_) * ratio * category.selectivity_values_[i]) * (1 - fishing_summation);
-      LOG_FINEST() << "Numbers after: " << category.category_->data_[i];
+  unsigned category_ndx = 0;
+  for (auto& category : categories_) {
+    for (unsigned i = 0; i < category.category_->data_.size(); ++i) {
+      //removals_by_category_age_[category_ndx][i] = category.category_->data_[i]; // initial numbers before process
+      LOG_FINEST() << "numbers at age = " << category.category_->data_[i] << " age " << i + model_->min_age() << " exploitation = " << category.exploitation_[i] << " M = " << *category.m_;
+      category.category_->data_[i] *= exp(-(*category.m_) * ratio * category.selectivity_values_[i]) * (1 - category.exploitation_[i]);
       if (category.category_->data_[i] < 0.0) {
         LOG_CODE_ERROR() << " Fishing caused a negative partition : if (categories->data_[i] < 0.0), category.category_->data_[i] = " << category.category_->data_[i] << " i = " << i + 1
             << "; numbers at age = " << category.category_->data_[i] << " age " << i + model_->min_age() << " exploitation = " << category.exploitation_[i] << " M = " << *category.m_;
       }
-    }
-  }
+      //removals_by_category_age_[category_ndx][i] -= category.category_->data_[i]; // minus what was left thus keeping the difference
 
+    }
+    ++category_ndx;
+  }
+  //removals_by_year_category_age_[model_->current_year()] = removals_by_category_age_;
 }
 
 /*
@@ -833,8 +801,72 @@ void MortalityInstantaneousRetained::FillReportCache(ostringstream& cache) {
     for (auto disc_dead : fishery.discards_dead_)
       cache << disc_dead.second << " ";
   }
-
   cache << "\n";
+
+//  // Print discard info
+//  for (auto& fishery_category : fishery_categories_) {
+//    cache << "total_discard_age_freq_" << fishery_category.fishery_label_ << "-" << fishery_category.category_label_ << " " << REPORT_R_DATAFRAME << "\nyear ";
+//    for (unsigned age = model_->min_age(); age <= model_->max_age(); ++age)
+//      cache << age << " ";
+//    cache << "\n";
+//    for (auto& year_values : total_discards_by_year_fishery_category_) {
+//      for (auto& fishery_values : year_values.second) {
+//        for (auto& category_values : fishery_values.second) {
+//          if ((category_values.first == fishery_category.category_label_) & (fishery_values.first == fishery_category.fishery_label_)) {
+//            cache << year_values.first << " ";
+//            for (auto age_vals : category_values.second) {
+//              cache << age_vals << " ";
+//            }
+//          }
+//        }
+//      }
+//      cache << "\n";
+//    }
+//  }
+//
+//  // Print surviving discard info
+//  for (auto& fishery_category : fishery_categories_) {
+//    cache << "surviving_discard_age_freq_" << fishery_category.fishery_label_ << "-" << fishery_category.category_label_ << " " << REPORT_R_DATAFRAME << "\nyear ";
+//    for (unsigned age = model_->min_age(); age <= model_->max_age(); ++age)
+//      cache << age << " ";
+//    cache << "\n";
+//    for (auto& year_values : surviving_discards_by_year_fishery_category_) {
+//      for (auto& fishery_values : year_values.second) {
+//        for (auto& category_values : fishery_values.second) {
+//          if ((category_values.first == fishery_category.category_label_) & (fishery_values.first == fishery_category.fishery_label_)) {
+//            cache << year_values.first << " ";
+//            for (auto age_vals : category_values.second) {
+//              cache << age_vals << " ";
+//            }
+//          }
+//        }
+//      }
+//      cache << "\n";
+//    }
+//  }
+//
+//
+//  // Print retained age-freq info
+//  for (auto& fishery_category : fishery_categories_) {
+//    cache << "retained_age_freq_" << fishery_category.fishery_label_ << "-" << fishery_category.category_label_ << " " << REPORT_R_DATAFRAME << "\nyear ";
+//    for (unsigned age = model_->min_age(); age <= model_->max_age(); ++age)
+//      cache << age << " ";
+//    cache << "\n";
+//    for (auto& year_values : removals_by_year_fishery_category_) {
+//      for (auto& fishery_values : year_values.second) {
+//        for (auto& category_values : fishery_values.second) {
+//          if ((category_values.first == fishery_category.category_label_) & (fishery_values.first == fishery_category.fishery_label_)) {
+//            cache << year_values.first << " ";
+//            for (auto age_vals : category_values.second) {
+//              cache << age_vals << " ";
+//            }
+//          }
+//        }
+//      }
+//      cache << "\n";
+//    }
+//  }
+//  cache << "\n";
 
 /*
   cache << "removals " << REPORT_R_DATAFRAME << "\n";
@@ -877,10 +909,6 @@ void MortalityInstantaneousRetained::FillTabularReportCache(ostringstream& cache
         cache << "catch[" << fishery.label_ << "][" << catches.first << "] ";
       for (auto actual_catches : fishery.actual_catches_)
         cache << "actual_catches[" << fishery.label_ << "][" << actual_catches.first << "] ";
-	  for (auto catches : fishery.retained_catches_)
-        cache << "retained_catch[" << fishery.label_ << "][" << catches.first << "] ";
-      for (auto actual_catches : fishery.actual_retained_catches_)
-        cache << "actual_retained_catches[" << fishery.label_ << "][" << actual_catches.first << "] ";
     }
     cache << "\n";
   }
@@ -891,10 +919,6 @@ void MortalityInstantaneousRetained::FillTabularReportCache(ostringstream& cache
     for (auto catches : fishery.catches_)
       cache << catches.second << " ";
     for (auto actual_catches : fishery.actual_catches_)
-      cache <<  actual_catches.second << " ";
-    for (auto catches : fishery.retained_catches_)
-      cache << catches.second << " ";
-    for (auto actual_catches : fishery.actual_retained_catches_)
       cache <<  actual_catches.second << " ";
   }
   cache << "\n";
@@ -953,7 +977,7 @@ bool MortalityInstantaneousRetained::check_years_in_methods_for_removal_obs(vect
       if (fishery.label_!= methods[fishery_index])
         continue;
       unsigned year_counter = 0;
-      for (auto& catches : fishery.retained_catches_) {
+      for (auto& catches : fishery.catches_) {
         // Check year is in the vector
         if (find(years.begin(),years.end(),catches.first) != years.end()) {
           if(catches.second <= 0)
@@ -992,4 +1016,3 @@ bool MortalityInstantaneousRetained::check_methods_for_removal_obs(vector<string
 } /* namespace age */
 } /* namespace processes */
 } /* namespace niwa */
-
