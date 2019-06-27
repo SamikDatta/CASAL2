@@ -494,7 +494,6 @@
 #define PARAM_PROJECTS                            "projects"
 #define PARAM_PROCESS_ABUNDANCE                   "process_abundance"
 #define PARAM_PROCESS_BIOMASS                     "process_biomass"
-#define PARAM_PROCESS_DISCARDS_BY_AGE             "process_discards_by_age"
 #define PARAM_PROCESS_PROPORTIONS_AT_AGE          "process_proportions_at_age"
 #define PARAM_PROCESS_PROPORTIONS_AT_LENGTH       "process_proportions_at_length"
 #define PARAM_PROCESS_PROPORTIONS_BY_CATEGORY     "process_proportions_by_category"

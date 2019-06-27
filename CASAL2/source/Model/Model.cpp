@@ -360,9 +360,11 @@ void Model::Validate() {
    * Do some simple checks
    * e.g Validate that the length_bins are strictly increasing
    */
-  for(unsigned length = 0; length < (length_bins_.size() - 1); ++length) {
-    if(length_bins_[length] > length_bins_[length + 1])
-      LOG_ERROR_P(PARAM_LENGTH_BINS) << ": Length bins must be strictly increasing, " << length_bins_[length] << " is greater than " << length_bins_[length +1] << ".";
+  if (partition_type_ == PartitionType::kLength) {
+    for(unsigned length = 0; length < (length_bins_.size() - 1); ++length) {
+      if(length_bins_[length] > length_bins_[length + 1])
+        LOG_ERROR_P(PARAM_LENGTH_BINS) << ": Length bins must be strictly increasing, " << length_bins_[length] << " is greater than " << length_bins_[length +1] << ".";
+    }
   }
 }
 

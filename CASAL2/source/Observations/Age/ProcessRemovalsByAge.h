@@ -79,4 +79,4 @@ protected:
 } /* namespace observations */
 } /* namespace niwa */
 
-#endif /* AGE_OBSERVATIONS_REMOVEALS_BY_AGE_H_ */
+#endif /* AGE_OBSERVATIONS_REMOVALS_BY_AGE_H_ */
