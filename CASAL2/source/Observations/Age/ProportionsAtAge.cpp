@@ -323,9 +323,9 @@ void ProportionsAtAge::Execute() {
         LOG_FINE() << "start_value: " << start_value << "; end_value: " << end_value << "; final_value: " << final_value;
         LOG_FINE() << "Numbers at age before ageing error is applied: " << numbers_age[data_offset];
       }
-//    	if(selectivity_for_combined_categories_) {
-//    		++selectivity_iter;
-//    	}
+    	if(selectivity_for_combined_categories_) {
+    		++selectivity_iter;
+    	}
     }
 
     /*
