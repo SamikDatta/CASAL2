@@ -442,7 +442,7 @@ void MortalityInstantaneousRetained::DoBuild() {
       }
     }
     if (!fishery_in_timestep) {
-      time_steps_to_skip_applying_F_mortaltiy_.push_back(time_step);
+      time_steps_to_skip_applying_F_mortality_.push_back(time_step);
       LOG_FINEST() << "time step " << time_step << " doesn't have a method associated so we will skip the exploitation calculation during DoExecute";
     }
   }
@@ -541,7 +541,7 @@ void MortalityInstantaneousRetained::DoExecute() {
    * Loop for each category. Add the vulnerability from each
    * category in to the fisheries it belongs too
    */
-  if (model_->state() != State::kInitialise || (find(time_steps_to_skip_applying_F_mortaltiy_.begin(),time_steps_to_skip_applying_F_mortaltiy_.end(), time_step_index) != time_steps_to_skip_applying_F_mortaltiy_.end())) {
+  if (model_->state() != State::kInitialise || (find(time_steps_to_skip_applying_F_mortality_.begin(),time_steps_to_skip_applying_F_mortality_.end(), time_step_index) != time_steps_to_skip_applying_F_mortality_.end())) {
     LOG_FINEST() << "time step = " << time_step_index << " not in initialisation and there is an F method in this timestep.";
       for (auto& fishery_category : fishery_categories_) {
         LOG_FINEST() << "checking fishery = " << fishery_category.fishery_label_;
@@ -602,8 +602,8 @@ void MortalityInstantaneousRetained::DoExecute() {
 
       partition::Category* category = fishery_category.category_.category_;
       for (unsigned i = 0; i < category->data_.size(); ++i) {
-        fishery_category.category_.exploitation_[i] += fishery_category.fishery_.exploitation_ * fishery_category.selectivity_values_[i]; // like first process
-//        fishery_category.category_.exploitation_[i] += fishery_category.fishery_.exploitation_ * fishery_category.selectivity_values_[i] * (fishery_category.retained_selectivity_->GetAgeResult(category->min_age_ + i, category->age_length_) + (fishery_category.discard_selectivity_->GetAgeResult(category->min_age_ + i, category->age_length_)) * (1 - fishery_category.retained_selectivity_->GetAgeResult(category->min_age_ + i, category->age_length_)));
+//        fishery_category.category_.exploitation_[i] += fishery_category.fishery_.exploitation_ * fishery_category.selectivity_values_[i]; // like first process
+        fishery_category.category_.exploitation_[i] += fishery_category.fishery_.exploitation_ * fishery_category.selectivity_values_[i] * (fishery_category.retained_selectivity_->GetAgeResult(category->min_age_ + i, category->age_length_) + (fishery_category.discard_mortality_selectivity_->GetAgeResult(category->min_age_ + i, category->age_length_)) * (1 - fishery_category.retained_selectivity_->GetAgeResult(category->min_age_ + i, category->age_length_)));
       }
     }
 
@@ -675,8 +675,8 @@ void MortalityInstantaneousRetained::DoExecute() {
       for (auto& fishery_category : fishery_categories_) {
         partition::Category* category = fishery_category.category_.category_;
         for (unsigned i = 0; i < category->data_.size(); ++i) {
-          fishery_category.category_.exploitation_[i] += fishery_category.fishery_.exploitation_ * fishery_category.selectivity_values_[i]; // like first process
-//          fishery_category.category_.exploitation_[i] += fishery_category.fishery_.exploitation_ * fishery_category.selectivity_values_[i] * (fishery_category.retained_selectivity_->GetAgeResult(category->min_age_ + i, category->age_length_) + (fishery_category.discard_selectivity_->GetAgeResult(category->min_age_ + i, category->age_length_)) * (1 - fishery_category.retained_selectivity_->GetAgeResult(category->min_age_ + i, category->age_length_)));
+//          fishery_category.category_.exploitation_[i] += fishery_category.fishery_.exploitation_ * fishery_category.selectivity_values_[i]; // like first process
+          fishery_category.category_.exploitation_[i] += fishery_category.fishery_.exploitation_ * fishery_category.selectivity_values_[i] * (fishery_category.retained_selectivity_->GetAgeResult(category->min_age_ + i, category->age_length_) + (fishery_category.discard_mortality_selectivity_->GetAgeResult(category->min_age_ + i, category->age_length_)) * (1 - fishery_category.retained_selectivity_->GetAgeResult(category->min_age_ + i, category->age_length_)));
         }
       }
     }

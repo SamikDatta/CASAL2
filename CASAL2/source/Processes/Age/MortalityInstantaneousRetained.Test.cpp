@@ -125,8 +125,8 @@ TEST_F(InternalEmptyModel, Processes_Mortality_Instantaneous_Retained_Simple) {
 
   model_->Start(RunMode::kBasic);
 
-  vector<Double> expected = { 99999.999925, 89999.975887, 79992.977186, 69383.896068, 58003.792709, 47381.356345, 37262.300009, 27896.404689,
-      18595.745375, 9297.823635, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; // R code created by Ian, numbers match within 0.01% so using those numbers
+  vector<Double> expected = { 99999.488207, 89991.271188, 79859.543717, 68767.792135, 57898.729167, 47374.102484, 37261.900869,
+      27896.388547, 18595.744808, 9297.823635 , 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; // R code created by Ian, numbers match within 0.01% so using those numbers
 
   partition::Category& stock = model_->partition().category("male");
   for (unsigned i = 0; i < expected.size(); ++i) {
