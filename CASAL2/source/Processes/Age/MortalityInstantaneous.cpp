@@ -430,7 +430,7 @@ void MortalityInstantaneous::DoBuild() {
       }
     }
     if (!fishery_in_timestep) {
-      time_steps_to_skip_applying_F_mortaltiy_.push_back(time_step);
+      time_steps_to_skip_applying_F_mortality_.push_back(time_step);
       LOG_FINEST() << "time step " << time_step << " doesn't have a method associated so we will skip the exploitation calculation during DoExecute";
     }
   }
@@ -522,7 +522,7 @@ void MortalityInstantaneous::DoExecute() {
    * Loop for each category. Add the vulnerability from each
    * category in to the fisheries it belongs too
    */
-  if (model_->state() != State::kInitialise || (find(time_steps_to_skip_applying_F_mortaltiy_.begin(),time_steps_to_skip_applying_F_mortaltiy_.end(), time_step_index) != time_steps_to_skip_applying_F_mortaltiy_.end())) {
+  if (model_->state() != State::kInitialise || (find(time_steps_to_skip_applying_F_mortality_.begin(),time_steps_to_skip_applying_F_mortality_.end(), time_step_index) != time_steps_to_skip_applying_F_mortality_.end())) {
     LOG_FINEST() << "time step = " << time_step_index << " not in initialisation and there is an F method in this timestep.";
       for (auto& fishery_category : fishery_categories_) {
         LOG_FINEST() << "checking fishery = " << fishery_category.fishery_label_;

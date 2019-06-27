@@ -9,7 +9,7 @@
  *
  * @section DESCRIPTION
  *
- * This observation is a specific process observation class. It is associated with the process type mortality_instantaneous.
+ * This observation is a specific process observation class. It is associated with the process type mortality_instantaneous_retained.
  * It calls a catch at object that is created from the process which represents the numbers at age halfway trough the mortality process
  * This class then applies ageing error and converts to a proportion which then gets sent to a likelihood for evaluation.
  *

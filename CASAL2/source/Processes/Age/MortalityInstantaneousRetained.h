@@ -1,8 +1,8 @@
 /**
  * @file MortalityInstantaneousRetained.h
- * @author Samik Datta and Craig Marsh (samik.datta@niwa.co.nz)
- * @github https://github.com/Zaita
- * @date 26/06/2019
+ * @author Samik Datta (samik.datta@niwa.co.nz)
+ * @github https://github.com/NIWAFisheriesModelling
+ * @date 27/06/2019
  * @section LICENSE
  *
  * Copyright NIWA Science 2019 - www.niwa.co.nz
@@ -10,8 +10,12 @@
  * @section DESCRIPTION
  *
  * This mortality process is a combination of the
- * constant and event mortality processes, with retained and discard mortality processes.
+ * constant and event mortality processes and has retained catch (retained_selectivity)
+ * i.e., catch on board is discards + retained catch (uses selectivity)
+ * Catch in "table catch" is retained catch
+ * Discards die with a selectivity discard_mortality_selectivity
  */
+ 
 #ifndef SOURCE_PROCESSES_CHILDREN_MORTALITYINSTANTANEOUSRETAINED_H_
 #define SOURCE_PROCESSES_CHILDREN_MORTALITYINSTANTANEOUSRETAINED_H_
 
@@ -36,6 +40,8 @@ using utilities::OrderedMap;
 class MortalityInstantaneousRetained : public Process {
  /**
  * FisheryData holds all the information related to a fishery
+ * could inherit from class MortalityInstantaneous? <<<<<<<<<<<
+ * only struct FisheryCategoryData  & FisheryData are changed
  */
   struct FisheryData {
     string          label_;
@@ -44,34 +50,35 @@ class MortalityInstantaneousRetained : public Process {
     Double          u_max_;
     string          penalty_label_;
     Penalty*        penalty_ = nullptr;
-    map<unsigned, Double>  catches_;
-    map<unsigned, Double>  actual_catches_; // want these two to be TOTAL catches
-    map<unsigned, Double>  retained_catches_;
-    map<unsigned, Double>  actual_retained_catches_; // want these two to be RETAINED catches
-    map<unsigned, Double>  discards_;
+    map<unsigned, Double>  catches_;         //discard + retained as estimated from retained catch
+    map<unsigned, Double>  actual_catches_;  //discard + retained (needed?)
+    map<unsigned, Double>  retained_catches_; //landing reported for fishery
+    map<unsigned, Double>  actual_retained_catches_; // if different following u_obs shift
+    map<unsigned, Double>  discards_;         //catch - retained
     map<unsigned, Double>  discards_dead_; // estimated discard catch which dies
     map<unsigned, Double>  exploitation_by_year_; // I(CM?) added this so it can be reported
-    map<unsigned, Double>  total_vulnerable_by_year_; // I added this so it can be reported
-    map<unsigned, Double>  retained_vulnerable_by_year_; // I added this so it can be reported
+													// maybe define for retained catch part of the stock
 
+    Double          vulnerability_;
     Double          retained_vulnerability_;
-    Double          total_vulnerability_;
-    Double          uobs_fishery_;
+    Double          uobs_fishery_;  // retained catch only??
     Double          exploitation_;
+    Double*         m_;  //which M is this?
   };
 
   struct CategoryData {
-      string                category_label_;
-      partition::Category*  category_;
-      Double*               m_;
-      vector<Double>        exploitation_;
-      vector<Double>        exp_values_;
-      string                selectivity_label_;
-      Selectivity*          selectivity_;
-      vector<Double>        selectivity_values_;
-      AgeWeight*            age_weight_ = nullptr;
-      string                age_weight_label_;
-      bool                  used_in_current_timestep_;
+    string                category_label_;
+    partition::Category*  category_;
+    Double*               m_;
+    vector<Double>        exploitation_;
+	  vector<Double>        retained_exploitation_;
+    vector<Double>        exp_values_;
+	  string                selectivity_label_;
+    Selectivity*          selectivity_;
+    vector<Double>        selectivity_values_; // M-ogive
+	  AgeWeight*            age_weight_ = nullptr;
+    string                age_weight_label_;
+    bool                  used_in_current_timestep_;
     };
   /**
    * FisheryCategoryData is used to store 1 Fishery x Category x Selectivity
@@ -84,14 +91,14 @@ class MortalityInstantaneousRetained : public Process {
     string            category_label_;
     string            selectivity_label_;
     Selectivity*      selectivity_ = nullptr;
-    vector<Double>    selectivity_values_;
+    vector<Double>    selectivity_values_;  // fishing for category_label_
     string            retained_selectivity_label_;
     Selectivity*      retained_selectivity_ = nullptr;
-    vector<Double>    retained_selectivity_values_;
+    vector<Double>    retained_selectivity_values_; // fishing
     string            discard_mortality_selectivity_label_;
     Selectivity*      discard_mortality_selectivity_ = nullptr;
     vector<Double>    discard_mortality_selectivity_values_; // mortality of discards
-  };
+  };   //add discard mortality later
 
 public:
   // methods
@@ -109,7 +116,7 @@ public:
   bool                       check_years_in_methods_for_removal_obs(vector<unsigned> years, vector<string> methods);
   bool                       check_methods_for_removal_obs(vector<string> methods);
 
-  // accessors
+  // accessors <<<<<<<<<<<<<<<<<<<<<<<<<<<
   map<unsigned, map<string, map<string, vector<Double>>>>&  catch_at() { return removals_by_year_fishery_category_; };
   map<unsigned, map<string, map<string, vector<Double>>>>&  retained_data() { return retained_by_year_fishery_category_; };
 
@@ -123,7 +130,7 @@ private:
   vector<string>              category_labels_;
   vector<FisheryCategoryData> fishery_categories_;
   map<string, FisheryData>    fisheries_;
-  parameters::Table*          catches_table_ = nullptr;
+  parameters::Table*          catches_table_ = nullptr; //retained catch
   parameters::Table*          method_table_ = nullptr;
 
   accessor::Categories        partition_;
@@ -139,25 +146,27 @@ private:
   OrderedMap<string, Double>  m_;
   vector<Double>              time_step_ratios_temp_;
   map<unsigned, Double>       time_step_ratios_;
-  vector<string>              selectivity_labels_;
+  vector<string>              selectivity_labels_;      //m_ogives?
   vector<Selectivity*>        selectivities_;
-  vector<string>              retained_selectivity_labels_;
+  vector<string>			        retained_selectivity_labels_;
+
   // members for observations
   map<unsigned,  map<string, map<string, vector<Double>>>> removals_by_year_fishery_category_; // Year,  fishery, category
   map<unsigned,  map<string, map<string, vector<Double>>>> retained_by_year_fishery_category_; // Year,  fishery, category
   map<unsigned,  map<string, map<string, vector<Double>>>> discards_by_year_fishery_category_; // Year,  fishery, category
   map<unsigned,  map<string, map<string, vector<Double>>>> discard_mortality_by_year_fishery_category_; // Year,  fishery, category
 
-
   map<unsigned, map<string, vector<string>>> year_method_category_to_store_; // Year,  fishery, category
   // Members for reporting
-  vector<unsigned>            time_steps_to_skip_applying_F_mortaltiy_;
+  vector<unsigned>            time_steps_to_skip_applying_F_mortality_;
   bool                        use_age_weight_ = true;
-  vector<vector<vector<Double>>> removals_by_year_category_age_; // year[year_ndx][category_ndx][age_ndx]
-
-  vector<vector<Double>>     removals_by_category_age_; // [category_ndx][age_ndx]
-  vector<vector<Double>>     retained_by_category_age_; // [category_ndx][age_ndx]
-  vector<vector<Double>>     discards_by_category_age_; // [category_ndx][age_ndx]
+//  vector<vector<vector<Double>>> removals_by_year_category_age_; // year[year_ndx][category_ndx][age_ndx]
+  
+			// retaied etc?
+		
+//  vector<vector<Double>>     removals_by_category_age_; // [category_ndx][age_ndx]
+//  vector<vector<Double>>     retained_by_category_age_; // [category_ndx][age_ndx]
+//  vector<vector<Double>>     discards_by_category_age_; // [category_ndx][age_ndx]
 
 
 };
