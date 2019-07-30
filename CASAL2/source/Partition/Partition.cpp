@@ -23,6 +23,7 @@
 #include "Model/Model.h"
 #include "Logging/Logging.h"
 
+#include "Utilities/Math.h"
 // Namespaces
 namespace niwa {
 
@@ -51,8 +52,6 @@ void Partition::Validate() {
  * accessor objects.
  */
 void Partition::Build() {
-
-
   Categories* categories                    = model_->categories();
   vector<string> category_names             = categories->category_names();
 
@@ -106,11 +105,8 @@ void Partition::BuildMeanLengthData() {
 
   for (auto iter : partition_) {
     auto& category = *iter.second; // mean_length_by_time_step_age_
-    LOG_FINEST() << "category = " << category.name_;
-    if (category.age_length_ == nullptr) {
-      LOG_FINE() << "No age-length pointer";
+    if (category.age_length_ == nullptr)
       return;
-    }
 
     // Allocate memory for the mean_length_by_time_step_age if it hasn't been done previously
     if (category.mean_length_by_time_step_age_.size() == 0) {
@@ -131,7 +127,6 @@ void Partition::BuildMeanLengthData() {
         for (unsigned age = category.min_age_; age <= category.max_age_; ++age) {
           age_index = age - category.min_age_;
           category.mean_length_by_time_step_age_[year_index][step_iter][age_index] = category.age_length_->GetMeanLength(year, step_iter, age);
-          LOG_FINE() << "year ndx = " << year_index << " time step index = " << step_iter << " age index = " << age << " val = " << category.mean_length_by_time_step_age_[year_index][step_iter][age_index] ;
         }
       }
     }
@@ -176,7 +171,7 @@ void Partition::BuildAgeLengthProportions() {
   LOG_FINEST() << "matrix_length_bin_count: " << matrix_length_bin_count;
   for (auto iter : partition_) {
     LOG_FINEST() << "Working on " << iter.first;
-    if (iter.second->age_length_->distribution() == AgeLength::Distribution::kLogNormal) {
+    if (iter.second->age_length_->distribution() == Distribution::kLogNormal) {
       for (unsigned i = 0; i < model_length_bins.size(); ++i) {
         if (model_length_bins[i] < 0.0001)
           length_bins[i] = log(0.0001);
@@ -217,7 +212,7 @@ void Partition::BuildAgeLengthProportions() {
           sigma = cv * mu;
 
 //          LOG_FINEST() << "year: " << year << "; age: " << age << "; mu: " << mu << "; cv: " << cv << "; sigma: " << sigma;
-          if (iter.second->age_length_->distribution() == AgeLength::Distribution::kLogNormal) {
+          if (iter.second->age_length_->distribution() == Distribution::kLogNormal) {
             // Transform parameters in to log space
             cv_temp = sigma / mu;
             Lvar = log(cv_temp * cv_temp + 1.0);
@@ -225,7 +220,8 @@ void Partition::BuildAgeLengthProportions() {
             sigma = sqrt(Lvar);
           }
 
-          LOG_FINEST() << "age: " << age;
+          for (Double value : length_bins)
+            LOG_FINEST() << "length_bin: " << value;
           LOG_FINEST() << "mu: " << mu;
           LOG_FINEST() << "sigma: " << sigma;
 
@@ -260,7 +256,6 @@ void Partition::BuildAgeLengthProportions() {
             }
             if (j > 0) {
               prop_in_length[j - 1] = cum[j] - cum[j - 1];
-              LOG_FINEST() << "prop_in_length[" << j-1 << "] = " << prop_in_length[j-1];
               sum += prop_in_length[j - 1];
             }
           } // for (unsigned j = 0; j < length_bin_count; ++j)
@@ -302,10 +297,6 @@ void Partition::Reset() {
  */
 partition::Category& Partition::category(const string& category_label) {
   auto find_iter = partition_.find(category_label);
-  LOG_FINE() << "we want " << category_label;
-  for(auto& map_vals : partition_)
-    LOG_FINE()  << map_vals.first;
-
   if (find_iter == partition_.end())
     LOG_FATAL() << "The partition does not have a category " << category_label;
 
@@ -317,12 +308,8 @@ partition::Category& Partition::category(const string& category_label) {
  */
 utilities::Vector4& Partition::age_length_proportions(const string& category_label) {
   auto find_iter = age_length_proportions_.find(category_label);
-  for(auto& map_vals : age_length_proportions_)
-    LOG_FINE()  << map_vals.first;
-
-  if (find_iter == age_length_proportions_.end()) {
+  if (find_iter == age_length_proportions_.end())
     LOG_FATAL() << "The partition does not have age length proportions for category " << category_label;
-  }
 
   return (*find_iter->second);
 }
