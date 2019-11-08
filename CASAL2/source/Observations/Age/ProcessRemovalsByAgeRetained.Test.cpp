@@ -129,7 +129,7 @@ min_age 3
 max_age 15
 plus_group True
 table obs
-2005 1.650990e-10 7.566419e-07 1.771126e-03 1.962050e-01 3.192775e-01 2.413644e-01 1.609208e-01 8.046047e-02 0 0 0 0 0 
+2005 0.000000001305499 0.000001165478875 0.000534586850633 0.022097448514629 0.247714059110266 0.358208779987943 0.247514990359885 0.123928968390864 0 0 0 0 0 
 end_table
 table error_values
 2005 651
@@ -168,22 +168,19 @@ TEST_F(InternalEmptyModel, Observation_Process_Removals_By_Age_Retained) {
   EXPECT_EQ("male", comparisons[year][0].category_);
   EXPECT_EQ(3, comparisons[year][0].age_);
   EXPECT_NEAR(1.650990e-10, comparisons[year][0].observed_, 1e-6);
-  EXPECT_NEAR(4.63555e-006, comparisons[year][0].expected_, 1e-6);
-  EXPECT_NEAR(1.258e-006, comparisons[year][0].score_, 1e-6);
+  EXPECT_NEAR(4.635554e-06, comparisons[year][0].expected_, 1e-6);
 
   // age 6
   EXPECT_EQ("male", comparisons[year][3].category_);
   EXPECT_EQ(6, comparisons[year][3].age_);
   EXPECT_NEAR(1.962050e-01, comparisons[year][3].observed_, 1e-6);
-  EXPECT_NEAR(0.1982, comparisons[year][3].expected_, 1e-4);
-  EXPECT_NEAR(701.819, comparisons[year][3].score_, 1e-3);
+  EXPECT_NEAR(0.1982003, comparisons[year][3].expected_, 1e-4);
 
   // age 9
   EXPECT_EQ("male", comparisons[year][6].category_);
   EXPECT_EQ(9, comparisons[year][6].age_);
   EXPECT_NEAR(1.609208e-01, comparisons[year][6].observed_, 1e-6);
-  EXPECT_NEAR(0.158976, comparisons[year][6].expected_, 1e-6);
-  EXPECT_NEAR(578.445, comparisons[year][6].score_, 1e-3);
+  EXPECT_NEAR(0.1589763, comparisons[year][6].expected_, 1e-6);
 
 }
 
