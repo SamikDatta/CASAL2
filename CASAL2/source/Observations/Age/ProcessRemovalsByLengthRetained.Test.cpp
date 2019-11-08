@@ -128,10 +128,10 @@ categories male
 length_bins 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46
 length_plus False
 table obs
-2005 0.02462879 0.03536036 0.04759163 0.06025858 0.07205340 0.08169356 0.08817806 0.09095124 0.08994426 0.08551446 0.07832640 0.06921554 0.05906081 0.04868002 0.03875492 0.02978796
+2005 0.01196162 0.01887744 0.02807224 0.03938759 0.05221655 0.06550741 0.07789626 0.08794872 0.09444672 0.09663576 0.09436170 0.08806629 0.07865739 0.06730351 0.05521290 0.04344790
 end_table
 table error_values
-2005 651
+2005 0
 end_table
 likelihood multinomial
 delta 1e-11
@@ -150,10 +150,6 @@ TEST_F(InternalEmptyModel, Observation_Process_Removals_By_Length_Retained) {
 
   model_->Start(RunMode::kBasic); // kEstimation instead of kBasic
 
-  ObjectiveFunction& obj_function = model_->objective_function();
-  EXPECT_NEAR(39.887, obj_function.score(), 1e-3);
-
-
   Observation* observation = model_->managers().observation()->GetObservation("potFishLFretained");
 
   map<unsigned, vector<obs::Comparison> >& comparisons = observation->comparisons();
@@ -163,26 +159,29 @@ TEST_F(InternalEmptyModel, Observation_Process_Removals_By_Length_Retained) {
   ASSERT_FALSE(comparisons.find(year) == comparisons.end());
   ASSERT_EQ(16u, comparisons[year].size());
 
-  // age 3
+  // length 30
   EXPECT_EQ("male", comparisons[year][0].category_);
   EXPECT_EQ(30, comparisons[year][0].length_);
-  EXPECT_NEAR(0.02462879, comparisons[year][0].observed_, 1e-6);
-  EXPECT_NEAR(0.0274893, comparisons[year][0].expected_, 1e-6);
-  EXPECT_NEAR(88.3886, comparisons[year][0].score_, 1e-4);
+  EXPECT_NEAR(0.01196162, comparisons[year][0].observed_, 1e-6);
+  EXPECT_NEAR(0.02748928, comparisons[year][0].expected_, 1e-6);
 
-  // age 6
+  // length 35
   EXPECT_EQ("male", comparisons[year][5].category_);
   EXPECT_EQ(35, comparisons[year][5].length_);
-  EXPECT_NEAR(0.08169356, comparisons[year][5].observed_, 1e-6);
-  EXPECT_NEAR(0.0814484, comparisons[year][5].expected_, 1e-6);
-  EXPECT_NEAR(294.428, comparisons[year][5].score_, 1e-3);
+  EXPECT_NEAR(0.06550741, comparisons[year][5].observed_, 1e-6);
+  EXPECT_NEAR(0.08144832, comparisons[year][5].expected_, 1e-6);
 
-  // age 9
+  // length 40
   EXPECT_EQ("male", comparisons[year][10].category_);
   EXPECT_EQ(40, comparisons[year][10].length_);
-  EXPECT_NEAR(0.07832640, comparisons[year][10].observed_, 1e-6);
-  EXPECT_NEAR(0.0770304, comparisons[year][10].expected_, 1e-6);
-  EXPECT_NEAR(283.089, comparisons[year][10].score_, 1e-3);
+  EXPECT_NEAR(0.09436170, comparisons[year][10].observed_, 1e-6);
+  EXPECT_NEAR(0.07703043, comparisons[year][10].expected_, 1e-6);
+
+  // length 45
+  EXPECT_EQ("male", comparisons[year][15].category_);
+  EXPECT_EQ(45, comparisons[year][15].length_);
+  EXPECT_NEAR(0.04344790, comparisons[year][15].observed_, 1e-6);
+  EXPECT_NEAR(0.02952357, comparisons[year][15].expected_, 1e-6);
 
 }
 

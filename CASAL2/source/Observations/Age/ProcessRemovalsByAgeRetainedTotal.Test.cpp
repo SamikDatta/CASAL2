@@ -151,10 +151,6 @@ TEST_F(InternalEmptyModel, Observation_Process_Removals_By_Age_Retained_Total) {
 
   model_->Start(RunMode::kBasic); // kEstimation instead of kBasic
 
-  ObjectiveFunction& obj_function = model_->objective_function();
-  EXPECT_NEAR(125.511, obj_function.score(), 1e-3);
-
-
   Observation* observation = model_->managers().observation()->GetObservation("potFishAFtotal");
 
   map<unsigned, vector<obs::Comparison> >& comparisons = observation->comparisons();

@@ -129,10 +129,10 @@ min_age 3
 max_age 15
 plus_group True
 table obs
-2005 0.000000001305499 0.000001165478875 0.000534586850633 0.022097448514629 0.247714059110266 0.358208779987943 0.247514990359885 0.123928968390864 0 0 0 0 0 
+2005 0.000000001305499 0.000001165478875 0.000534586850633 0.022097448514660 0.247714059110614 0.358208779988447 0.247514990360233 0.123928968391039 0 0 0 0 0
 end_table
 table error_values
-2005 651
+2005 0
 end_table
 likelihood multinomial
 delta 1e-11
@@ -151,10 +151,6 @@ TEST_F(InternalEmptyModel, Observation_Process_Removals_By_Age_Retained) {
 
   model_->Start(RunMode::kBasic); // kEstimation instead of kBasic
 
-  ObjectiveFunction& obj_function = model_->objective_function();
-  EXPECT_NEAR(24.9387, obj_function.score(), 1e-4);
-
-
   Observation* observation = model_->managers().observation()->GetObservation("potFishAFretained");
 
   map<unsigned, vector<obs::Comparison> >& comparisons = observation->comparisons();
@@ -167,20 +163,20 @@ TEST_F(InternalEmptyModel, Observation_Process_Removals_By_Age_Retained) {
   // age 3
   EXPECT_EQ("male", comparisons[year][0].category_);
   EXPECT_EQ(3, comparisons[year][0].age_);
-  EXPECT_NEAR(1.650990e-10, comparisons[year][0].observed_, 1e-6);
-  EXPECT_NEAR(4.635554e-06, comparisons[year][0].expected_, 1e-6);
+  EXPECT_NEAR(0.000000001305499, comparisons[year][0].observed_, 1e-6);
+  EXPECT_NEAR(0.000004635554, comparisons[year][0].expected_, 1e-6);
 
   // age 6
   EXPECT_EQ("male", comparisons[year][3].category_);
   EXPECT_EQ(6, comparisons[year][3].age_);
-  EXPECT_NEAR(1.962050e-01, comparisons[year][3].observed_, 1e-6);
-  EXPECT_NEAR(0.1982003, comparisons[year][3].expected_, 1e-4);
+  EXPECT_NEAR(0.022097448514660, comparisons[year][3].observed_, 1e-6);
+  EXPECT_NEAR(0.198200334125, comparisons[year][3].expected_, 1e-4);
 
   // age 9
   EXPECT_EQ("male", comparisons[year][6].category_);
   EXPECT_EQ(9, comparisons[year][6].age_);
-  EXPECT_NEAR(1.609208e-01, comparisons[year][6].observed_, 1e-6);
-  EXPECT_NEAR(0.1589763, comparisons[year][6].expected_, 1e-6);
+  EXPECT_NEAR(0.247514990360233, comparisons[year][6].observed_, 1e-6);
+  EXPECT_NEAR(0.158976250444, comparisons[year][6].expected_, 1e-6);
 
 }
 
